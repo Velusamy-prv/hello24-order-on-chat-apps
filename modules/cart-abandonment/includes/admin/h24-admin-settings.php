@@ -61,20 +61,20 @@
 	<h2>Integration Settings</h2>
 	<form id="wp_h24_setting_form">
 		<div>API Key <span id="api_key_invalid" style="color: red; display:none;">(Invalid API Key)</span></div>
-		<input type="text" class="h24-input" disabled id="setting_api_key" value="<?php echo $api_key; ?>"/>
+		<input type="text" class="h24-input" disabled id="setting_api_key" value="<?php echo esc_attr($api_key); ?>"/>
 		<div>Shop Domain Url</div>
-		<input type="text" class="h24-input" disabled id="setting_shop_name" value="<?php echo $shop_name; ?>" required/>
+		<input type="text" class="h24-input" disabled id="setting_shop_name" value="<?php echo esc_attr($shop_name); ?>" required/>
 		<div>Email</div>
-		<input type="email" class="h24-input" id="setting_email" value="<?php echo $email; ?>" required/>
+		<input type="email" class="h24-input" id="setting_email" value="<?php echo esc_attr($email); ?>" required/>
 		<div>Whatsapp Number (With Country Code. Eg +91 )</div>
-		<input type="tel" class="h24-input" id="setting_whatsapp_number" value="<?php echo $whatsapp_number; ?>" required/>
+		<input type="tel" class="h24-input" id="setting_whatsapp_number" value="<?php echo esc_attr($whatsapp_number); ?>" required/>
 
-		<input type="text" class="h24-input" style="display:none;" disabled id="setting_h24_domain" value="<?php echo $h24_domain; ?>" />
+		<input type="text" class="h24-input" style="display:none;" disabled id="setting_h24_domain" value="<?php echo esc_attr($h24_domain); ?>" />
 		
 		<p>Environment:</p>
-		<input type="radio" id="environment_dev" name="setting_environment" value="dev" <?php echo $environment == 'dev' ? 'checked' : ''; ?> >
+		<input type="radio" id="environment_dev" name="setting_environment" value="dev" <?php echo esc_attr($environment) == 'dev' ? 'checked' : ''; ?> >
 		<label for="environment_dev">Development</label><br>
-		<input type="radio" id="environment_prod" name="setting_environment" value="prod" <?php echo $environment == 'prod' ? 'checked' : ''; ?> >
+		<input type="radio" id="environment_prod" name="setting_environment" value="prod" <?php echo esc_attr($environment) == 'prod' ? 'checked' : ''; ?> >
 		<label for="environment_prod">Production</label><br>
 		
 		<br/>
@@ -82,7 +82,7 @@
 		<br/>
 		<div>
 			<input type="submit" id="h24_save_settings" class="button-primary" value="Save Settings" />
-			<input type="submit" id="h24_goto_settings" class="button-primary" value="Go to Hello24 Settings" onclick="window.open('<?php echo $h24_setting_url; ?>', '_blank')"/>
+			<input type="submit" id="h24_goto_settings" class="button-primary" value="Go to Hello24 Settings" onclick="window.open('<?php echo esc_url($h24_setting_url); ?>', '_blank')"/>
 		</div>	
 	</form>
 	<br/>
@@ -95,17 +95,17 @@
 		<br/>
 		<br/>
 		<div>Title</div>
-		<input type="text" class="h24-input" id="whatsapp_button_title" value="<?php echo $whatsapp_button_title; ?>"/>
+		<input type="text" class="h24-input" id="whatsapp_button_title" value="<?php echo esc_attr($whatsapp_button_title); ?>"/>
 		<div>Sub Title</div>
-		<input type="text" class="h24-input" id="whatsapp_button_sub_title" value="<?php echo $whatsapp_button_sub_title; ?>"/>
+		<input type="text" class="h24-input" id="whatsapp_button_sub_title" value="<?php echo esc_attr($whatsapp_button_sub_title); ?>"/>
 		<div>Greeting Text 1</div>
-		<input type="text" class="h24-input" id="whatsapp_button_greeting_text1" value="<?php echo $whatsapp_button_greeting_text1; ?>"/>
+		<input type="text" class="h24-input" id="whatsapp_button_greeting_text1" value="<?php echo esc_attr($whatsapp_button_greeting_text1); ?>"/>
 		<div>Greeting Text 2</div>
-		<input type="text" class="h24-input" id="whatsapp_button_greeting_text2" value="<?php echo $whatsapp_button_greeting_text2; ?>"/>
+		<input type="text" class="h24-input" id="whatsapp_button_greeting_text2" value="<?php echo esc_attr($whatsapp_button_greeting_text2); ?>"/>
 		<div>Agent Name</div>
-		<input type="text" class="h24-input" id="whatsapp_button_agent_name" value="<?php echo $whatsapp_button_agent_name; ?>"/>
+		<input type="text" class="h24-input" id="whatsapp_button_agent_name" value="<?php echo esc_attr($whatsapp_button_agent_name); ?>"/>
 		<div>Message</div>
-		<input type="text" class="h24-input" id="whatsapp_button_message" value="<?php echo $whatsapp_button_message; ?>"/>
+		<input type="text" class="h24-input" id="whatsapp_button_message" value="<?php echo esc_attr($whatsapp_button_message); ?>"/>
 		<br/>
 
 		<div>

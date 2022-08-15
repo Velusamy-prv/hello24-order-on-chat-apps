@@ -1170,7 +1170,7 @@ class H24_Cart_Abandonment {
 
 			$whatsapp_button_path = H24_CARTFLOWS_CART_ABANDONMENT_TRACKING_URL . 'assets/js/hello24-whatsapp-chat-button1.js';
 
-			echo '<script>
+			echo esc_html('<script>
 				//MANDATORY
 				window.hello24_whatsappNumber = "' . esc_attr($whatsapp_number) . '";
 		
@@ -1184,7 +1184,7 @@ class H24_Cart_Abandonment {
 				window.hello24_message = "' . esc_attr($whatsapp_button_message) . '";
 			</script>
 			<script src="' . esc_attr($whatsapp_button_path) . '"></script>
-		';
+		');
 		}
 	}
 
