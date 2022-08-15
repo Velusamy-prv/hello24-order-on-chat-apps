@@ -75,9 +75,14 @@
 
             $("body").on("click", "#h24_save_whatsapp_button", function () {
 
+                var whatsapp_button_enabled = "disabled";
+                if ($("#whatsapp_button_enabled").is(':checked')) {
+                    whatsapp_button_enabled = "enabled";
+                }
+
                 var data = {
                     action: "h24_save_whatsapp_button",
-                    whatsapp_button_enabled: $("#whatsapp_button_enabled").is(':checked'),
+                    whatsapp_button_enabled: whatsapp_button_enabled,
                     whatsapp_button_title: $("#whatsapp_button_title").val(),
                     whatsapp_button_sub_title: $("#whatsapp_button_sub_title").val(),
                     whatsapp_button_greeting_text1: $("#whatsapp_button_greeting_text1").val(),

@@ -91,7 +91,7 @@
 	<h2>Whatsapp Button Settings</h2>
 	<form id="wp_h24_whatsapp_button_form">
 		<label for="whatsapp_button_enabled"> Enable Whatsapp Button ?</label>
-		<input type="checkbox" id="whatsapp_button_enabled" name="whatsapp_button_enabled" <?php echo $whatsapp_button_enabled == true ? 'checked' : ''; ?> />
+		<input type="checkbox" id="whatsapp_button_enabled" name="whatsapp_button_enabled" <?php echo esc_attr($whatsapp_button_enabled) == "enabled" ? 'checked' : ''; ?> />
 		<br/>
 		<br/>
 		<div>Title</div>

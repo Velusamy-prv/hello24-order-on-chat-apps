@@ -216,7 +216,7 @@ class H24_Cart_Abandonment {
 
 		$whatsapp_button_enabled = $this->get_h24_setting_by_meta("whatsapp_button_enabled");
 		if($whatsapp_button_enabled == null) {
-			$whatsapp_button_enabled = true;
+			$whatsapp_button_enabled = "enabled";
 		}
 
 		$whatsapp_button_title = $this->get_h24_setting_by_meta('whatsapp_button_title');
@@ -745,7 +745,7 @@ class H24_Cart_Abandonment {
 	}
 
 	public function h24_save_whatsapp_button() {		
-		$whatsapp_button_enabled =  rest_sanitize_boolean( $_POST['whatsapp_button_enabled'] );	
+		$whatsapp_button_enabled = sanitize_text_field( $_POST['whatsapp_button_enabled'] );	
 		$whatsapp_button_title = sanitize_text_field( $_POST['whatsapp_button_title'] );	
 		$whatsapp_button_sub_title = sanitize_text_field( $_POST['whatsapp_button_sub_title'] );	
 		$whatsapp_button_greeting_text1 = sanitize_text_field( $_POST['whatsapp_button_greeting_text1'] );	
@@ -1133,7 +1133,7 @@ class H24_Cart_Abandonment {
 		$whatsapp_number = $this->get_h24_setting_by_meta('whatsapp_number');
 		$whatsapp_button_enabled = $this->get_h24_setting_by_meta('whatsapp_button_enabled');
 		if($whatsapp_button_enabled == null) {
-			$whatsapp_button_enabled = false;
+			$whatsapp_button_enabled = "enabled";
 		}
 
 		$whatsapp_button_title = $this->get_h24_setting_by_meta('whatsapp_button_title');
@@ -1166,11 +1166,11 @@ class H24_Cart_Abandonment {
 			$whatsapp_button_message = 'Hi';
 		}
 
-		if ($whatsapp_number && $whatsapp_button_enabled == true){
+		if ($whatsapp_number && $whatsapp_button_enabled == "enabled"){
 
 			$whatsapp_button_path = H24_CARTFLOWS_CART_ABANDONMENT_TRACKING_URL . 'assets/js/hello24-whatsapp-chat-button1.js';
 
-			echo esc_html('<script>
+			echo '<script>
 				//MANDATORY
 				window.hello24_whatsappNumber = "' . esc_attr($whatsapp_number) . '";
 		
@@ -1184,7 +1184,7 @@ class H24_Cart_Abandonment {
 				window.hello24_message = "' . esc_attr($whatsapp_button_message) . '";
 			</script>
 			<script src="' . esc_attr($whatsapp_button_path) . '"></script>
-		');
+		';
 		}
 	}
 

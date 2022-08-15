@@ -109,7 +109,7 @@ class H24_Cart_Abandonment_Db {
 			$meta_data["api_key"] = md5( uniqid( wp_rand(), true ) );
 			$meta_data["environment"] = "prod";
 
-			$meta_data["whatsapp_button_enabled"] = true;
+			$meta_data["whatsapp_button_enabled"] = "enabled";
 			$meta_data["whatsapp_button_title"] = "Need help ?";
 			$meta_data["whatsapp_button_sub_title"] = "Typically replies in minutes";
 			$meta_data["whatsapp_button_greeting_text1"] = "Hello there 👋";
