@@ -1,0 +1,2 @@
+Version 1.0.0 - Monday, 1st Aug 2022
+- Initial Release
