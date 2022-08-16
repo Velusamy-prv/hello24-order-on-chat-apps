@@ -2,7 +2,7 @@
 Contributors: Velusamy
 Tags: whatsapp api, click to chat, woocommerce order on whatsapp, whatsapp button, abandoned cart
 Requires at least: 4.4
-Tested up to: 6.8.0
+Tested up to: 6.0.1
 Stable tag: 1.0.0
 Requires PHP: 5.6
 License: GPLv2 or later

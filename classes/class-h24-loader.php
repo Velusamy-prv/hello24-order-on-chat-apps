@@ -78,7 +78,6 @@ if ( ! class_exists( 'WP_H24_Loader' ) ) {
 			define( 'WP_H24_URL', plugins_url( '/', H24_PLUGIN_FILE ) );
 			define( 'WP_HELLO24_SERVICE_BASE_URL', 'https://api.hello24.in' );
 			define( 'WP_H24_VER', '1.0.0' );
-			define( 'WP_H24_SLUG', 'h24_cartflows_ca' );
 			define( 'WP_H24_SETTING_TABLE', 'h24_setting' );
 			define( 'WP_H24_ABANDONMENT_TABLE', 'h24_abandonment' );
 			define( 'WP_H24_PAGE_NAME', 'hello24-order-on-chat-apps' );

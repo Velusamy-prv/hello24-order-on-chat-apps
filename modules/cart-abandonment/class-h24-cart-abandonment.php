@@ -173,8 +173,8 @@ class H24_Cart_Abandonment {
 	 *  Initialise all the constants
 	 */
 	public function define_cart_abandonment_constants() {
-		define( 'H24_CARTFLOWS_CART_ABANDONMENT_TRACKING_DIR', WP_H24_DIR . 'modules/cart-abandonment/' );
-		define( 'H24_CARTFLOWS_CART_ABANDONMENT_TRACKING_URL', WP_H24_URL . 'modules/cart-abandonment/' );
+		define( 'H24_CART_ABANDONMENT_TRACKING_DIR', WP_H24_DIR . 'modules/cart-abandonment/' );
+		define( 'H24_CART_ABANDONMENT_TRACKING_URL', WP_H24_URL . 'modules/cart-abandonment/' );
 		define( 'H24_Cart_Abandonment_ORDER', 'abandoned' );
 		define( 'H24_CART_COMPLETED_ORDER', 'completed' );
 		define( 'H24_CART_LOST_ORDER', 'lost' );
@@ -261,7 +261,7 @@ class H24_Cart_Abandonment {
 		?>
 
 		<?php
-		include_once H24_CARTFLOWS_CART_ABANDONMENT_TRACKING_DIR . 'includes/admin/h24-admin-settings.php';
+		include_once H24_CART_ABANDONMENT_TRACKING_DIR . 'includes/admin/h24-admin-settings.php';
 		?>
 		<?php
 	}
@@ -326,7 +326,7 @@ class H24_Cart_Abandonment {
 		global $post;
 		wp_enqueue_script(
 			'h24-abandonment-tracking',
-			H24_CARTFLOWS_CART_ABANDONMENT_TRACKING_URL . 'assets/js/h24-abandonment-tracking.js',
+			H24_CART_ABANDONMENT_TRACKING_URL . 'assets/js/h24-abandonment-tracking.js',
 			array( 'jquery' ),
 			"1.0",
 			true
@@ -354,7 +354,7 @@ class H24_Cart_Abandonment {
 		global $post;
 		wp_enqueue_script(
 			'webhook_setting_script',
-			H24_CARTFLOWS_CART_ABANDONMENT_TRACKING_URL . 'assets/js/webhook-setting.js',
+			H24_CART_ABANDONMENT_TRACKING_URL . 'assets/js/webhook-setting.js',
 			array( 'jquery' ),
 			"1.0",
 			true
@@ -1168,7 +1168,7 @@ class H24_Cart_Abandonment {
 
 		if ($whatsapp_number && $whatsapp_button_enabled == "enabled"){
 
-			$whatsapp_button_path = H24_CARTFLOWS_CART_ABANDONMENT_TRACKING_URL . 'assets/js/hello24-whatsapp-chat-button1.js';
+			$whatsapp_button_path = H24_CART_ABANDONMENT_TRACKING_URL . 'assets/js/hello24-whatsapp-chat-button1.js';
 
 			echo '<script>
 				//MANDATORY
