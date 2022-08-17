@@ -71,11 +71,14 @@
 
 		<input type="text" class="h24-input" style="display:none;" disabled id="setting_h24_domain" value="<?php echo esc_attr($h24_domain); ?>" />
 		
-		<p>Environment: [DO NOT CHANGE]</p>
-		<input type="radio" id="environment_prod" name="setting_environment" value="prod" <?php echo esc_attr($environment) == 'prod' ? 'checked' : ''; ?> >
-		<label for="environment_prod">Production</label><br>
-		<input type="radio" id="environment_dev" name="setting_environment" value="dev" <?php echo esc_attr($environment) == 'dev' ? 'checked' : ''; ?> >
-		<label for="environment_dev">Development</label><br>
+		<span id="environment_container" style="display:none;">
+			<p>Environment:</p>
+			<input type="radio" id="environment_prod" name="setting_environment" value="prod" <?php echo esc_attr($environment) == 'prod' ? 'checked' : ''; ?> >
+			<label for="environment_prod">Production</label><br>
+			<input type="radio" id="environment_dev" name="setting_environment" value="dev" <?php echo esc_attr($environment) == 'dev' ? 'checked' : ''; ?> >
+			<label for="environment_dev">Development</label><br>
+		</span>
+
 		<br/>
 		<div id="h24_enable_integration_note" style="color: red; display:none;">Note: Please fill the above form and click save settings to enable integration with Hello24.</div>
 		<br/>
