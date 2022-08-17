@@ -8,7 +8,7 @@ Requires PHP: 5.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Add Whatsapp chat button and Recover your lost revenue by sending automatic cart abandonment messages using WhatsApp Official API. Send order & shipment notification on WhatsApp.
+Gain 5X more revenue by Abandoned cart recovery, Add Chat Button, Marketing automation, Resell/Upsell/Cross-sell using Whatsapp API
 
 == Description ==
 We are a conversational commerce platform that can help online brands to engage customers on WhatsApp. We have sophisticated customer journeys that help you get better marketing ROI and higher sales.
@@ -71,12 +71,12 @@ You can fill in your business details using following form: https://forms.gle/4N
 
 == Frequently Asked Questions ==
 == Screenshots ==
-1. WhatsApp Chat button for websites
+1. Chat button for websites
 2. Multi agent Whatsapp support platform
 3. Order notifications on whatsapp
 4. Chatbot builder and chat automation
 5. Broadcast & Bulk Marketing campaign on whatsApp
-6. Abandoned Cart Recovery
+6. Abandoned Cart Recovery using Whatsapp
 7. COD to Prepaid order conversion and reduce RTO
 8. Agent Analytics
 == Changelog ==

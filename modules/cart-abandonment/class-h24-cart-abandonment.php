@@ -47,10 +47,10 @@ class H24_Cart_Abandonment {
 		add_action( 'wp_ajax_h24_activate_integration_service', array( $this, 'h24_activate_integration_service' ) );
 		add_action( 'wp_ajax_nopriv_h24_activate_integration_service', array( $this, 'h24_activate_integration_service' ) );
 	
-		add_action( 'wp_ajax_h24_save_whatsapp_button', array( $this, 'h24_save_whatsapp_button' ) );
-		add_action( 'wp_ajax_nopriv_h24_save_whatsapp_button', array( $this, 'h24_save_whatsapp_button' ) );
+		add_action( 'wp_ajax_h24_save_chat_button', array( $this, 'h24_save_chat_button' ) );
+		add_action( 'wp_ajax_nopriv_h24_save_chat_button', array( $this, 'h24_save_chat_button' ) );
 	
-		add_action( 'wp_footer', array( $this, 'whatsapp_chat_widget') );
+		add_action( 'wp_footer', array( $this, 'hello24_chat_widget') );
 
 		add_action( 'rest_api_init', function () {
 			register_rest_route( 'api/v1', '/getWoocommerceInfo', array(
@@ -148,6 +148,14 @@ class H24_Cart_Abandonment {
 			));
 		});
 
+		add_action( 'rest_api_init', function () {
+			register_rest_route( 'api/v1', '/updateSettings', array(
+			  'methods' => 'POST',
+			  'callback' => array( $this, 'updateSettings' ),
+			  'permission_callback' => array( $this, 'checkValidPermission' ),
+			));
+		});
+
 		add_filter( 'jwt_auth_whitelist', function ( $endpoints ) {
 			return array(
 				'/wp-json/api/v1/getWoocommerceInfo',
@@ -162,6 +170,7 @@ class H24_Cart_Abandonment {
 				'/wp-json/api/v1/setWebhook',
 				'/wp-json/api/v1/deleteWebhook',
 				'/wp-json/api/v1/deleteWebhooks',
+				'/wp-json/api/v1/updateSettings',
 			);
 		});
 
@@ -205,48 +214,48 @@ class H24_Cart_Abandonment {
 
 		$shop_name = $this->get_h24_setting_by_meta("shop_name");
 		$email = $this->get_h24_setting_by_meta("email");
-		$whatsapp_number = $this->get_h24_setting_by_meta("whatsapp_number");
+		$phone_number = $this->get_h24_setting_by_meta("phone_number");
 		$environment = $this->get_h24_setting_by_meta("environment");
 		if($environment == null) {
 			$environment = "prod";
 		}
 
 		$code = $this->get_h24_setting_by_meta("code");
-		$h24_setting_url = $h24_domain_front . "?wordpressDomain=" . get_home_url();
+		$h24_setting_url = $h24_domain_front . "?wordpressDomain=" . get_home_url() . "&apiKey=" . $api_key ;
 
-		$whatsapp_button_enabled = $this->get_h24_setting_by_meta("whatsapp_button_enabled");
-		if($whatsapp_button_enabled == null) {
-			$whatsapp_button_enabled = "enabled";
+		$chat_button_enabled = $this->get_h24_setting_by_meta("chat_button_enabled");
+		if($chat_button_enabled == null) {
+			$chat_button_enabled = "enabled";
 		}
 
-		$whatsapp_button_title = $this->get_h24_setting_by_meta('whatsapp_button_title');
-		if($whatsapp_button_title == null) {
-			$whatsapp_button_title = 'Need Help ?';
+		$chat_button_title = $this->get_h24_setting_by_meta('chat_button_title');
+		if($chat_button_title == null) {
+			$chat_button_title = 'Need Help ?';
 		}
 
-		$whatsapp_button_sub_title = $this->get_h24_setting_by_meta('whatsapp_button_sub_title');
-		if($whatsapp_button_sub_title == null) {
-			$whatsapp_button_sub_title = 'Typically replies in minutes';
+		$chat_button_sub_title = $this->get_h24_setting_by_meta('chat_button_sub_title');
+		if($chat_button_sub_title == null) {
+			$chat_button_sub_title = 'Typically replies in minutes';
 		}
 
-		$whatsapp_button_greeting_text1 = $this->get_h24_setting_by_meta('whatsapp_button_greeting_text1');
-		if($whatsapp_button_greeting_text1 == null) {
-			$whatsapp_button_greeting_text1 = 'Hello there 👋';
+		$chat_button_greeting_text1 = $this->get_h24_setting_by_meta('chat_button_greeting_text1');
+		if($chat_button_greeting_text1 == null) {
+			$chat_button_greeting_text1 = 'Hello there 👋';
 		}
 
-		$whatsapp_button_greeting_text2 = $this->get_h24_setting_by_meta('whatsapp_button_greeting_text2');
-		if($whatsapp_button_greeting_text2 == null) {
-			$whatsapp_button_greeting_text2 = 'How can I help you?';
+		$chat_button_greeting_text2 = $this->get_h24_setting_by_meta('chat_button_greeting_text2');
+		if($chat_button_greeting_text2 == null) {
+			$chat_button_greeting_text2 = 'How can I help you?';
 		}
 
-		$whatsapp_button_agent_name = $this->get_h24_setting_by_meta('whatsapp_button_agent_name');
-		if($whatsapp_button_agent_name == null) {
-			$whatsapp_button_agent_name = 'Customer Support';
+		$chat_button_agent_name = $this->get_h24_setting_by_meta('chat_button_agent_name');
+		if($chat_button_agent_name == null) {
+			$chat_button_agent_name = 'Customer Support';
 		}
 
-		$whatsapp_button_message = $this->get_h24_setting_by_meta('whatsapp_button_message');
-		if($whatsapp_button_message == null) {
-			$whatsapp_button_message = 'Hi';
+		$chat_button_message = $this->get_h24_setting_by_meta('chat_button_message');
+		if($chat_button_message == null) {
+			$chat_button_message = 'Hi';
 		}
 
 		if ($shop_name == "")
@@ -328,7 +337,7 @@ class H24_Cart_Abandonment {
 			'h24-abandonment-tracking',
 			H24_CART_ABANDONMENT_TRACKING_URL . 'assets/js/h24-abandonment-tracking.js',
 			array( 'jquery' ),
-			"1.0",
+			filemtime(H24_CART_ABANDONMENT_TRACKING_URL . 'assets/js/h24-abandonment-tracking.js'),
 			true
 		);
 
@@ -356,7 +365,7 @@ class H24_Cart_Abandonment {
 			'webhook_setting_script',
 			H24_CART_ABANDONMENT_TRACKING_URL . 'assets/js/webhook-setting.js',
 			array( 'jquery' ),
-			"1.0",
+			filemtime(H24_CART_ABANDONMENT_TRACKING_URL . 'assets/js/webhook-setting.js'),
 			true
 		);
 
@@ -690,7 +699,7 @@ class H24_Cart_Abandonment {
 	public function h24_activate_integration_service() {		
 		$api_key = sanitize_text_field( $_POST['api_key'] );	
 		$shop_name = sanitize_text_field( $_POST['shop_name'] );
-		$whatsapp_number = sanitize_text_field( $_POST['whatsapp_number'] );
+		$phone_number = sanitize_text_field( $_POST['phone_number'] );
 		$environment = sanitize_text_field( $_POST['environment'] );
 
 		$email = sanitize_email( $_POST['email'] );
@@ -702,7 +711,7 @@ class H24_Cart_Abandonment {
 		$this->set_h24_setting_by_meta("code", $code);
 		$this->set_h24_setting_by_meta("shop_name", $shop_name);
 		$this->set_h24_setting_by_meta("email", $email);
-		$this->set_h24_setting_by_meta("whatsapp_number", $whatsapp_number);
+		$this->set_h24_setting_by_meta("phone_number", $phone_number);
 		$this->set_h24_setting_by_meta("environment", $environment);
 		$this->set_h24_setting_by_meta("api_key", md5( uniqid( wp_rand(), true ) ));
 
@@ -710,7 +719,7 @@ class H24_Cart_Abandonment {
 			'apiKey' => $api_key,
 			'shopName' => $shop_name,
 			'email' => $email,
-			'whatsappNumber' => $whatsapp_number,
+			'phoneNumber' => $phone_number,
 			'environment' => $environment,
 			'wordpressDomain' => get_home_url(),
 			"code" => $code
@@ -735,6 +744,8 @@ class H24_Cart_Abandonment {
 		{
 			$this->set_h24_setting_by_meta("h24_domain", $response->h24Domain);
 			$this->set_h24_setting_by_meta("h24_domain_front", $response->h24DomainFront);
+			$this->set_h24_setting_by_meta("hello24_chat_mobile_link", $response->hello24ChatMobileLink);
+			$this->set_h24_setting_by_meta("hello24_chat_web_link", $response->hello24ChatWebLink);
 			$this->set_h24_setting_by_meta("api_key", $api_key);
 			wp_send_json_success($response);
 		}
@@ -744,22 +755,22 @@ class H24_Cart_Abandonment {
 
 	}
 
-	public function h24_save_whatsapp_button() {		
-		$whatsapp_button_enabled = sanitize_text_field( $_POST['whatsapp_button_enabled'] );	
-		$whatsapp_button_title = sanitize_text_field( $_POST['whatsapp_button_title'] );	
-		$whatsapp_button_sub_title = sanitize_text_field( $_POST['whatsapp_button_sub_title'] );	
-		$whatsapp_button_greeting_text1 = sanitize_text_field( $_POST['whatsapp_button_greeting_text1'] );	
-		$whatsapp_button_greeting_text2 = sanitize_text_field( $_POST['whatsapp_button_greeting_text2'] );	
-		$whatsapp_button_agent_name = sanitize_text_field( $_POST['whatsapp_button_agent_name'] );	
-		$whatsapp_button_message = sanitize_text_field( $_POST['whatsapp_button_message'] );	
+	public function h24_save_chat_button() {		
+		$chat_button_enabled = sanitize_text_field( $_POST['chat_button_enabled'] );	
+		$chat_button_title = sanitize_text_field( $_POST['chat_button_title'] );	
+		$chat_button_sub_title = sanitize_text_field( $_POST['chat_button_sub_title'] );	
+		$chat_button_greeting_text1 = sanitize_text_field( $_POST['chat_button_greeting_text1'] );	
+		$chat_button_greeting_text2 = sanitize_text_field( $_POST['chat_button_greeting_text2'] );	
+		$chat_button_agent_name = sanitize_text_field( $_POST['chat_button_agent_name'] );	
+		$chat_button_message = sanitize_text_field( $_POST['chat_button_message'] );	
 
-		$this->set_h24_setting_by_meta("whatsapp_button_enabled", $whatsapp_button_enabled);
-		$this->set_h24_setting_by_meta("whatsapp_button_title", $whatsapp_button_title);
-		$this->set_h24_setting_by_meta("whatsapp_button_sub_title", $whatsapp_button_sub_title);
-		$this->set_h24_setting_by_meta("whatsapp_button_greeting_text1", $whatsapp_button_greeting_text1);
-		$this->set_h24_setting_by_meta("whatsapp_button_greeting_text2", $whatsapp_button_greeting_text2);
-		$this->set_h24_setting_by_meta("whatsapp_button_agent_name", $whatsapp_button_agent_name);
-		$this->set_h24_setting_by_meta("whatsapp_button_message", $whatsapp_button_message);
+		$this->set_h24_setting_by_meta("chat_button_enabled", $chat_button_enabled);
+		$this->set_h24_setting_by_meta("chat_button_title", $chat_button_title);
+		$this->set_h24_setting_by_meta("chat_button_sub_title", $chat_button_sub_title);
+		$this->set_h24_setting_by_meta("chat_button_greeting_text1", $chat_button_greeting_text1);
+		$this->set_h24_setting_by_meta("chat_button_greeting_text2", $chat_button_greeting_text2);
+		$this->set_h24_setting_by_meta("chat_button_agent_name", $chat_button_agent_name);
+		$this->set_h24_setting_by_meta("chat_button_message", $chat_button_message);
 
 		wp_send_json_success();
 	}
@@ -781,7 +792,7 @@ class H24_Cart_Abandonment {
 				"woocommerceApiUrl" => get_woocommerce_api_url(''),
 				"shopName" => $this->get_h24_setting_by_meta('shop_name'),
 				"email" => $this->get_h24_setting_by_meta('email'),
-				"whatsappNumber" => $this->get_h24_setting_by_meta('whatsapp_number'),
+				"phoneNumber" => $this->get_h24_setting_by_meta('phone_number'),
 				"environment" => $this->get_h24_setting_by_meta('environment'),
 				"pluginActivated" => $this->get_h24_setting_by_meta('plugin_activated')
 			);
@@ -1091,6 +1102,25 @@ class H24_Cart_Abandonment {
 		}
 	}
 	
+	public function updateSettings($request){
+		$api_key = sanitize_text_field( $request->get_header('apiKey') );
+		if ($api_key == $this->get_h24_setting_by_meta('api_key')){
+			$params = $this->wporg_recursive_sanitize_text_field( $request->get_params() );
+
+			foreach ( $params as $param_key => $param_value ) {
+				$this->set_h24_setting_by_meta($param_key, $param_value);
+			}
+
+			return array(
+				"code" => "SUCCESS"
+			);
+		} else {
+			return array(
+				"code" => "NOT AUTHORIZED"
+			);		
+		}
+	}
+
 	public function deleteWebhookWithName($name){
 		$data_store = WC_Data_Store::load( 'webhook' );
 		$webhookIds   = $data_store->search_webhooks();
@@ -1129,61 +1159,78 @@ class H24_Cart_Abandonment {
 		}
 	}
 
-	function whatsapp_chat_widget() {
-		$whatsapp_number = $this->get_h24_setting_by_meta('whatsapp_number');
-		$whatsapp_button_enabled = $this->get_h24_setting_by_meta('whatsapp_button_enabled');
-		if($whatsapp_button_enabled == null) {
-			$whatsapp_button_enabled = "enabled";
+	function hello24_chat_widget() {
+		$phone_number = $this->get_h24_setting_by_meta('phone_number');
+		$chat_button_enabled = $this->get_h24_setting_by_meta('chat_button_enabled');
+		if($chat_button_enabled == null) {
+			$chat_button_enabled = "enabled";
 		}
 
-		$whatsapp_button_title = $this->get_h24_setting_by_meta('whatsapp_button_title');
-		if($whatsapp_button_title == null) {
-			$whatsapp_button_title = 'Need Help ?';
+		$chat_button_title = $this->get_h24_setting_by_meta('chat_button_title');
+		if($chat_button_title == null) {
+			$chat_button_title = 'Need Help ?';
 		}
 
-		$whatsapp_button_sub_title = $this->get_h24_setting_by_meta('whatsapp_button_sub_title');
-		if($whatsapp_button_sub_title == null) {
-			$whatsapp_button_sub_title = 'Typically replies in minutes';
+		$chat_button_sub_title = $this->get_h24_setting_by_meta('chat_button_sub_title');
+		if($chat_button_sub_title == null) {
+			$chat_button_sub_title = 'Typically replies in minutes';
 		}
 
-		$whatsapp_button_greeting_text1 = $this->get_h24_setting_by_meta('whatsapp_button_greeting_text1');
-		if($whatsapp_button_greeting_text1 == null) {
-			$whatsapp_button_greeting_text1 = 'Hello there 👋';
+		$chat_button_greeting_text1 = $this->get_h24_setting_by_meta('chat_button_greeting_text1');
+		if($chat_button_greeting_text1 == null) {
+			$chat_button_greeting_text1 = 'Hello there 👋';
 		}
 
-		$whatsapp_button_greeting_text2 = $this->get_h24_setting_by_meta('whatsapp_button_greeting_text2');
-		if($whatsapp_button_greeting_text2 == null) {
-			$whatsapp_button_greeting_text2 = 'How can I help you?';
+		$chat_button_greeting_text2 = $this->get_h24_setting_by_meta('chat_button_greeting_text2');
+		if($chat_button_greeting_text2 == null) {
+			$chat_button_greeting_text2 = 'How can I help you?';
 		}
 
-		$whatsapp_button_agent_name = $this->get_h24_setting_by_meta('whatsapp_button_agent_name');
-		if($whatsapp_button_agent_name == null) {
-			$whatsapp_button_agent_name = 'Customer Support';
+		$chat_button_agent_name = $this->get_h24_setting_by_meta('chat_button_agent_name');
+		if($chat_button_agent_name == null) {
+			$chat_button_agent_name = 'Customer Support';
 		}
 
-		$whatsapp_button_message = $this->get_h24_setting_by_meta('whatsapp_button_message');
-		if($whatsapp_button_message == null) {
-			$whatsapp_button_message = 'Hi';
+		$chat_button_message = $this->get_h24_setting_by_meta('chat_button_message');
+		if($chat_button_message == null) {
+			$chat_button_message = 'Hi';
 		}
 
-		if ($whatsapp_number && $whatsapp_button_enabled == "enabled"){
+		$hello24_chat_theme_color = $this->get_h24_setting_by_meta('hello24_chat_theme_color');
+		$hello24_chat_theme_color_gradient = $this->get_h24_setting_by_meta('hello24_chat_theme_color_gradient');
+		$hello24_chat_button_size = $this->get_h24_setting_by_meta('hello24_chat_button_size');
+		$hello24_chat_button_position = $this->get_h24_setting_by_meta('hello24_chat_button_position');
+		$hello24_chat_mobile_link = $this->get_h24_setting_by_meta('hello24_chat_mobile_link');
+		$hello24_chat_web_link = $this->get_h24_setting_by_meta('hello24_chat_web_link');
+		$hello24_chat_button = $this->get_h24_setting_by_meta('hello24_chat_button');
 
-			$whatsapp_button_path = H24_CART_ABANDONMENT_TRACKING_URL . 'assets/js/hello24-whatsapp-chat-button1.js';
+		if ($phone_number && $chat_button_enabled == "enabled"){
+
+			$chat_button_js_path = H24_CART_ABANDONMENT_TRACKING_URL . 'assets/js/hello24-chat-button1.js';
 
 			echo '<script>
 				//MANDATORY
-				window.hello24_whatsappNumber = "' . esc_attr($whatsapp_number) . '";
+				window.hello24_phoneNumber = "' . esc_attr($phone_number) . '";
 		
 				//OPTIONAL
 				window.hello24_companyName = "Hello24";
-				window.hello24_title = "' . esc_attr($whatsapp_button_title) . '";
-				window.hello24_subTitle = "' . esc_attr($whatsapp_button_sub_title) . '";
-				window.hello24_greetingText1 = "' . esc_attr($whatsapp_button_greeting_text1) . '";
-				window.hello24_greetingText2 = "' . esc_attr($whatsapp_button_greeting_text2) . '";
-				window.hello24_agentName = "' . esc_attr($whatsapp_button_agent_name) . '";
-				window.hello24_message = "' . esc_attr($whatsapp_button_message) . '";
+				window.hello24_title = "' . esc_attr($chat_button_title) . '";
+				window.hello24_subTitle = "' . esc_attr($chat_button_sub_title) . '";
+				window.hello24_greetingText1 = "' . esc_attr($chat_button_greeting_text1) . '";
+				window.hello24_greetingText2 = "' . esc_attr($chat_button_greeting_text2) . '";
+				window.hello24_agentName = "' . esc_attr($chat_button_agent_name) . '";
+				window.hello24_message = "' . esc_attr($chat_button_message) . '";
+				
+				window.hello24_chat_theme_color = "' . esc_attr($hello24_chat_theme_color) . '";
+				window.hello24_chat_theme_color_gradient = "' . esc_attr($hello24_chat_theme_color_gradient) . '";
+				window.hello24_chat_button_size = "' . esc_attr($hello24_chat_button_size) . '";
+				window.hello24_chat_button_position = "' . esc_attr($hello24_chat_button_position) . '";
+				window.hello24_chat_mobile_link = "' . esc_url($hello24_chat_mobile_link) . '";
+				window.hello24_chat_web_link = "' . esc_url($hello24_chat_web_link) . '";
+				window.hello24_chat_button = "' . esc_attr($hello24_chat_button) . '";
+
 			</script>
-			<script src="' . esc_attr($whatsapp_button_path) . '"></script>
+			<script src="' . esc_attr($chat_button_js_path) . '"></script>
 		';
 		}
 	}

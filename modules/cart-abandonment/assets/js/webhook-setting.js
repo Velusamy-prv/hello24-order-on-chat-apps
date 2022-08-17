@@ -33,7 +33,7 @@
                 return false;
             })
 
-            $("#wp_h24_whatsapp_button_form").submit(function () {
+            $("#wp_h24_chat_button_form").submit(function () {
                 return false;
             })
 
@@ -47,7 +47,7 @@
             })
 
             $("body").on("click", "#h24_save_settings", function () {
-                if ($("#setting_shop_name").val() == "" || $("#setting_email").val() == "" || $("#setting_whatsapp_number").val() == "") {
+                if ($("#setting_shop_name").val() == "" || $("#setting_email").val() == "" || $("#setting_phone_number").val() == "") {
                     return;
                 }
                 var data = {
@@ -56,7 +56,7 @@
                     api_key: $("#setting_api_key").val(),
                     shop_name: $("#setting_shop_name").val(),
                     email: $("#setting_email").val(),
-                    whatsapp_number: $("#setting_whatsapp_number").val(),
+                    phone_number: $("#setting_phone_number").val(),
                     environment: $("input[name='setting_environment']:checked").val(),
                 };
                 jQuery("#h24_loding").css("display", "flex");
@@ -73,22 +73,22 @@
                 );
             });
 
-            $("body").on("click", "#h24_save_whatsapp_button", function () {
+            $("body").on("click", "#h24_save_chat_button", function () {
 
-                var whatsapp_button_enabled = "disabled";
-                if ($("#whatsapp_button_enabled").is(':checked')) {
-                    whatsapp_button_enabled = "enabled";
+                var chat_button_enabled = "disabled";
+                if ($("#chat_button_enabled").is(':checked')) {
+                    chat_button_enabled = "enabled";
                 }
 
                 var data = {
-                    action: "h24_save_whatsapp_button",
-                    whatsapp_button_enabled: whatsapp_button_enabled,
-                    whatsapp_button_title: $("#whatsapp_button_title").val(),
-                    whatsapp_button_sub_title: $("#whatsapp_button_sub_title").val(),
-                    whatsapp_button_greeting_text1: $("#whatsapp_button_greeting_text1").val(),
-                    whatsapp_button_greeting_text2: $("#whatsapp_button_greeting_text2").val(),
-                    whatsapp_button_agent_name: $("#whatsapp_button_agent_name").val(),
-                    whatsapp_button_message: $("#whatsapp_button_message").val(),
+                    action: "h24_save_chat_button",
+                    chat_button_enabled: chat_button_enabled,
+                    chat_button_title: $("#chat_button_title").val(),
+                    chat_button_sub_title: $("#chat_button_sub_title").val(),
+                    chat_button_greeting_text1: $("#chat_button_greeting_text1").val(),
+                    chat_button_greeting_text2: $("#chat_button_greeting_text2").val(),
+                    chat_button_agent_name: $("#chat_button_agent_name").val(),
+                    chat_button_message: $("#chat_button_message").val(),
                 };
 
                 jQuery("#h24_loding").css("display", "flex");
