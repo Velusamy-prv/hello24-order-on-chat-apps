@@ -28,17 +28,17 @@ Released On: 09, AUGUST 2022
         var hello24_chat_web_link = window.hello24_chat_web_link;
 
         var hello24_chat_button_size_px = "30px";
-        var hello24_chat_button_size_inside_px = "25px";
+        var hello24_chat_button_size_inside_px = "24px";
 
         if (hello24_chat_button_size == "large") {
             hello24_chat_button_size_px = "50px";
-            hello24_chat_button_size_inside_px = "40px";
+            hello24_chat_button_size_inside_px = "36px";
         } else if (hello24_chat_button_size == "medium") {
             hello24_chat_button_size_px = "40px";
-            hello24_chat_button_size_inside_px = "35px";
+            hello24_chat_button_size_inside_px = "32px";
         }
 
-        var default_hello24_chat_button = `data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBoZWlnaHQ9IjE2IiB2aWV3Qm94PSIwIDAgMTYgMTYiIHdpZHRoPSIxNiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjZmZmZmZmIj48cGF0aCBkPSJtNiA3YzAtLjI3NjE0LjIyMzg2LS41LjUtLjVoM2MuMjc2MTQgMCAuNS4yMjM4Ni41LjVzLS4yMjM4Ni41LS41LjVoLTNjLS4yNzYxNCAwLS41LS4yMjM4Ni0uNS0uNXoiLz48cGF0aCBkPSJtNi41IDguNWMtLjI3NjE0IDAtLjUuMjIzODYtLjUuNXMuMjIzODYuNS41LjVoMmMuMjc2MTQgMCAuNS0uMjIzODYuNS0uNXMtLjIyMzg2LS41LS41LS41eiIvPjxwYXRoIGQ9Im0yLjAwMDAxIDhjMC0zLjMxMzcxIDIuNjg2My02IDYtNiAzLjMxMzY5IDAgNS45OTk5OSAyLjY4NjI5IDUuOTk5OTkgNiAwIDMuMzEzNy0yLjY4NjMgNi01Ljk5OTk5IDYtMS4wOTM2MiAwLTIuMTIwMTItLjI5My0zLjAwMzgzLS44MDVsLTIuMzM4MDUuNzc5M2MtLjE3NTk2LjA1ODctLjM2OTkzLjAxNTEtLjUwMzkxLS4xMTMxLS4xMzM5Ny0uMTI4My0uMTg1OTItLjMyMDItLjEzNDk3LS40OTg2bC43MTE2MS0yLjQ5MDZjLS40NjYwNi0uODUzNC0uNzMwODUtMS44MzI0My0uNzMwODUtMi44NzJ6bTYtNWMtMi43NjE0MiAwLTUgMi4yMzg1OC01IDUgMCAuOTMzMDguMjU1MTIgMS44MDUwNi42OTkxMiAyLjU1MTcuMDcwMzkuMTE4My4wODg4NC4yNjA1LjA1MTAxLjM5MjlsLS41MDg5NSAxLjc4MTMgMS42NTgxOS0uNTUyN2MuMTQyNjEtLjA0NzYuMjk5MDUtLjAyODQuNDI1OTguMDUyMS43NzMxOC40OTA2IDEuNjg5OTcuNzc0NyAyLjY3NDY1Ljc3NDcgMi43NjEzOSAwIDQuOTk5OTktMi4yMzg2IDQuOTk5OTktNSAwLTIuNzYxNDItMi4yMzg2LTUtNC45OTk5OS01eiIvPjwvZz48L3N2Zz4=`;
+        var default_hello24_chat_button = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMWVtIiBoZWlnaHQ9IjFlbSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHN0eWxlPSItbXMtdHJhbnNmb3JtOiByb3RhdGUoMzYwZGVnKTsgLXdlYmtpdC10cmFuc2Zvcm06IHJvdGF0ZSgzNjBkZWcpOyB0cmFuc2Zvcm06IHJvdGF0ZSgzNjBkZWcpOyI+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIzMiIgZD0iTTQwOCA2NEgxMDRhNTYuMTYgNTYuMTYgMCAwIDAtNTYgNTZ2MTkyYTU2LjE2IDU2LjE2IDAgMCAwIDU2IDU2aDQwdjgwbDkzLjcyLTc4LjE0YTggOCAwIDAgMSA1LjEzLTEuODZINDA4YTU2LjE2IDU2LjE2IDAgMCAwIDU2LTU2VjEyMGE1Ni4xNiA1Ni4xNiAwIDAgMC01Ni01NloiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSIyMTYiIHI9IjMyIiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjIxNiIgcj0iMzIiIGZpbGw9IndoaXRlIi8+PGNpcmNsZSBjeD0iMzUyIiBjeT0iMjE2IiByPSIzMiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=`;
         var hello24_companyName = window.hello24_companyName || "Hello24";
         var hello24_title = window.hello24_title || "Need help?";
         var hello24_subTitle = window.hello24_subTitle || "Typically replies in minutes";
