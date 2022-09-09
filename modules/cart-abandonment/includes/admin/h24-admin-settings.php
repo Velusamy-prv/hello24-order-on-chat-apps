@@ -1,6 +1,6 @@
 <?php
 /**
- * Cartflows view for cart abandonment tabs.
+ * Hello24 Cart view for cart abandonment tabs.
  *
  * @package Hello24-Order-On-Chat-Apps
  */
@@ -42,6 +42,16 @@
 			-webkit-animation: spin 2s linear infinite; /* Safari */
 			animation: spin 2s linear infinite;
 		}
+
+		.hello24-grid-container {
+			display: grid;
+			grid-template-columns: 350px 300px;
+			grid-gap: 20px;
+		}
+
+		.hello24-grid-container .grid-child img{
+			text-align: left;  
+		}
 	</style>
 	<div class="loading-content overlay" id="h24_loding">
 		<div class="overlay-content">
@@ -53,7 +63,7 @@
 	<h2>Gain higher ROI and 5X sales by using our plugin features.</h2>
 	<p>&ensp; 1. Abandoned cart recovery with 'Pay on Chat' feature</p>
 	<p>&ensp; 2. Share products and take orders on Chat Apps (complete purchase flow on Chat)</p>
-	<p>&ensp; 3. 100% Free Chatbot Builder</p>
+	<p>&ensp; 3. Custom Chatbot Builder</p>
 	<p>&ensp; 4. Up-sell, Cross-Sell & Re-sell automation</p>
 	<p>&ensp; 5. Order, Shipment notifications to keep your customers well informed about their orders</p>
 
@@ -91,29 +101,49 @@
 	<hr>
 
 	<h2>Chat Button Settings</h2>
-	<form id="wp_h24_chat_button_form">
-		<label for="chat_button_enabled"> Enable Chat Button in your Website ?</label>
-		<input type="checkbox" id="chat_button_enabled" name="chat_button_enabled" <?php echo esc_attr($chat_button_enabled) == "enabled" ? 'checked' : ''; ?> />
-		<br/>
-		<br/>
-		<div>Title</div>
-		<input type="text" class="h24-input" id="chat_button_title" value="<?php echo esc_attr($chat_button_title); ?>"/>
-		<div>Sub Title</div>
-		<input type="text" class="h24-input" id="chat_button_sub_title" value="<?php echo esc_attr($chat_button_sub_title); ?>"/>
-		<div>Greeting Text 1</div>
-		<input type="text" class="h24-input" id="chat_button_greeting_text1" value="<?php echo esc_attr($chat_button_greeting_text1); ?>"/>
-		<div>Greeting Text 2</div>
-		<input type="text" class="h24-input" id="chat_button_greeting_text2" value="<?php echo esc_attr($chat_button_greeting_text2); ?>"/>
-		<div>Agent Name</div>
-		<input type="text" class="h24-input" id="chat_button_agent_name" value="<?php echo esc_attr($chat_button_agent_name); ?>"/>
-		<div>Message</div>
-		<input type="text" class="h24-input" id="chat_button_message" value="<?php echo esc_attr($chat_button_message); ?>"/>
-		<div>Position on Website</div>
-		<input type="text" class="h24-input" id="chat_button_message" value="<?php echo esc_attr($chat_button_message); ?>"/>
-		<br/>
+	<div class="hello24-grid-container">
+		<div class="grid-child">
+		<form id="wp_h24_chat_button_form">
+			<label for="chat_button_enabled"> Enable Chat Button in your Website ?</label>
+			<input type="checkbox" id="chat_button_enabled" name="chat_button_enabled" <?php echo esc_attr($chat_button_enabled) == "enabled" ? 'checked' : ''; ?> />
+			<br/>
+			<br/>
+			<div>Theme Color</div>
+			<input type="text" class="h24-input" id="chat_button_theme_color" value="<?php echo esc_attr( $chat_button_theme_color ); ?>"/>
+			<div>Theme Color Gradient</div>
+			<input type="text" class="h24-input" id="chat_button_theme_color_gradient" value="<?php echo esc_attr( $chat_button_theme_color_gradient ); ?>"/>
+			<div>Title</div>
+			<input type="text" class="h24-input" id="chat_button_title" value="<?php echo esc_attr($chat_button_title); ?>"/>
+			<div>Sub Title</div>
+			<input type="text" class="h24-input" id="chat_button_sub_title" value="<?php echo esc_attr($chat_button_sub_title); ?>"/>
+			<div>Greeting Text 1</div>
+			<input type="text" class="h24-input" id="chat_button_greeting_text1" value="<?php echo esc_attr($chat_button_greeting_text1); ?>"/>
+			<div>Greeting Text 2</div>
+			<input type="text" class="h24-input" id="chat_button_greeting_text2" value="<?php echo esc_attr($chat_button_greeting_text2); ?>"/>
+			<div>Agent Name</div>
+			<input type="text" class="h24-input" id="chat_button_agent_name" value="<?php echo esc_attr($chat_button_agent_name); ?>"/>
+			<div>Message</div>
+			<input type="text" class="h24-input" id="chat_button_message" value="<?php echo esc_attr($chat_button_message); ?>"/>
+			<div>Position on Website(left or right)</div>
+			<input type="text" class="h24-input" id="chat_button_position" value="<?php echo esc_attr($chat_button_position); ?>"/>
+			<div>Position from Bottom(px)</div>
+			<input type="text" class="h24-input" id="chat_button_bottom" value="<?php echo esc_attr($chat_button_bottom); ?>"/>
+			<br/>
 
-		<div>
-			<input type="submit" id="h24_save_chat_button" class="button-primary" value="Save Button" />
-		</div>	
-	</form>
+			<div>
+				<input type="submit" id="h24_save_chat_button" class="button-primary" value="Save Button" />
+			</div>	
+		</form>
+		</div>
+
+		<div class="grid-child">
+			<div>		
+				<?php printf(
+					'<img src="%1$s" alt="" width="350"/>',
+					plugins_url( '../../../../modules/cart-abandonment/assets/img/chat_button.jpg', __FILE__ )
+				); ?>
+			</div>
+		</div>
+	
+	</div>
 </div>

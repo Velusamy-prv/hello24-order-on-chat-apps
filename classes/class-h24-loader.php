@@ -1,6 +1,6 @@
 <?php
 /**
- * CartFlows Loader.
+ * Hello24 Cart Loader.
  *
  * @package Hello24-Order-On-Chat-Apps
  */
@@ -38,9 +38,9 @@ if ( ! class_exists( 'WP_H24_Loader' ) ) {
 				self::$instance = new self();
 
 				/**
-				 * CartFlows CA loaded.
+				 * Hello24 Cart CA loaded.
 				 *
-				 * Fires when Cartflows CA was fully loaded and instantiated.
+				 * Fires when Hello24 Cart CA was fully loaded and instantiated.
 				 *
 				 * @since 1.0.0
 				 */
@@ -63,6 +63,8 @@ if ( ! class_exists( 'WP_H24_Loader' ) ) {
 			// deActivation hook.
 			register_deactivation_hook( H24_PLUGIN_FILE, array( $this, 'deactivation_reset' ) );
 
+			register_uninstall_hook( H24_PLUGIN_FILE, array( $this, 'uninstall_plugin' ));
+
 			add_action( 'plugins_loaded', array( $this, 'load_plugin' ), 99 );
 
 		}
@@ -81,7 +83,7 @@ if ( ! class_exists( 'WP_H24_Loader' ) ) {
 			define( 'WP_H24_SETTING_TABLE', 'h24_setting' );
 			define( 'WP_H24_ABANDONMENT_TABLE', 'h24_abandonment' );
 			define( 'WP_H24_PAGE_NAME', 'hello24-order-on-chat-apps' );
-			define( 'WP_H24_GENERAL_SETTINGS_SECTION', 'cartflows_cart_abandonment_settings_section' );
+			define( 'WP_H24_GENERAL_SETTINGS_SECTION', 'h24_cart_abandonment_settings_section' );
 			
 		}
 
@@ -107,6 +109,9 @@ if ( ! class_exists( 'WP_H24_Loader' ) ) {
 			$Abandonment = H24_Cart_Abandonment::get_instance();
 			$h24Domain = $Abandonment -> get_h24_setting_by_meta("h24_domain");
 			$Abandonment -> set_h24_setting_by_meta("plugin_activated", "true");
+
+			include_once WP_H24_DIR . 'modules/cart-link/cart-link.php';
+			$Cart_Link = Cart_Link::instance();
 		}
 
 
@@ -209,7 +214,6 @@ if ( ! class_exists( 'WP_H24_Loader' ) ) {
 		 * Activation Reset
 		 */
 		public function activation_reset() {
-			register_uninstall_hook( H24_PLUGIN_FILE, array( $this, 'uninstall_plugin' ));
 			if ( !class_exists( 'WooCommerce' ) ) {
 				return;
 			}
@@ -227,6 +231,8 @@ if ( ! class_exists( 'WP_H24_Loader' ) ) {
 		 * Deactivation Reset
 		 */
 		public function deactivation_reset() {
+			error_log('deactivation_reset 1');
+
 			if ( !class_exists( 'WooCommerce' ) ) {
 				return;
 			}
@@ -235,12 +241,16 @@ if ( ! class_exists( 'WP_H24_Loader' ) ) {
 			$h24Domain = $Abandonment -> get_h24_setting_by_meta("h24_domain");
 			$Abandonment -> set_h24_setting_by_meta("plugin_activated", "false");
 			$Abandonment-> deleteAllHello24Webhooks();
+			error_log('deactivation_reset 2');
+
 		}
 
 		/**
 		 * Uninstall Plugin
 		 */
 		public function uninstall_plugin() {
+			error_log('uninstall_plugin');
+
 			if ( !class_exists( 'WooCommerce' ) ) {
 				return;
 			}
@@ -249,6 +259,12 @@ if ( ! class_exists( 'WP_H24_Loader' ) ) {
 			$h24Domain = $Abandonment -> get_h24_setting_by_meta("h24_domain");
 			$Abandonment -> set_h24_setting_by_meta("plugin_activated", "false");
 			$Abandonment-> deleteAllHello24Webhooks();
+
+			error_log('uninstall_plugin 2');
+			global $wpdb;
+			$cart_abandonment_table = $wpdb->prefix . WP_H24_ABANDONMENT_TABLE;
+			$wpdb->query( "DROP TABLE IF EXISTS {$cart_abandonment_table}" );
+			error_log('uninstall_plugin cart_abandonment_table DROPPED');
 		}
 	}
 

@@ -83,12 +83,16 @@
                 var data = {
                     action: "h24_save_chat_button",
                     chat_button_enabled: chat_button_enabled,
+                    chat_button_theme_color: $("#chat_button_theme_color").val(),
+                    chat_button_theme_color_gradient: $("#chat_button_theme_color_gradient").val(),
                     chat_button_title: $("#chat_button_title").val(),
                     chat_button_sub_title: $("#chat_button_sub_title").val(),
                     chat_button_greeting_text1: $("#chat_button_greeting_text1").val(),
                     chat_button_greeting_text2: $("#chat_button_greeting_text2").val(),
                     chat_button_agent_name: $("#chat_button_agent_name").val(),
                     chat_button_message: $("#chat_button_message").val(),
+                    chat_button_position: $("#chat_button_position").val(),
+                    chat_button_bottom: $("#chat_button_bottom").val(),
                 };
 
                 jQuery("#h24_loding").css("display", "flex");
@@ -108,5 +112,12 @@
     }
 
     webhookSetting.init();
+
+    jQuery(document).ready(function () {
+
+        jQuery('#chat_button_theme_color').wpColorPicker();
+        jQuery('#chat_button_theme_color_gradient').wpColorPicker();
+
+    });
 
 })(jQuery);

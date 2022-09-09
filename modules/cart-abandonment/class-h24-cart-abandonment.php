@@ -125,6 +125,46 @@ class H24_Cart_Abandonment {
 		});
 
 		add_action( 'rest_api_init', function () {
+			register_rest_route( 'api/v1', '/addOrderNote', array(
+			  'methods' => 'POST',
+			  'callback' => array( $this, 'addOrderNote' ),
+			  'permission_callback' => array( $this, 'checkValidPermission' ),
+			));
+		});
+
+		add_action( 'rest_api_init', function () {
+			register_rest_route( 'api/v1', '/refundOrder', array(
+			  'methods' => 'POST',
+			  'callback' => array( $this, 'refundOrder' ),
+			  'permission_callback' => array( $this, 'checkValidPermission' ),
+			));
+		});
+
+		add_action( 'rest_api_init', function () {
+			register_rest_route( 'api/v1', '/addDiscountToOrder', array(
+			  'methods' => 'POST',
+			  'callback' => array( $this, 'addDiscountToOrder' ),
+			  'permission_callback' => array( $this, 'checkValidPermission' ),
+			));
+		});
+
+		add_action( 'rest_api_init', function () {
+			register_rest_route( 'api/v1', '/markOrderAsPaid', array(
+			  'methods' => 'POST',
+			  'callback' => array( $this, 'markOrderAsPaid' ),
+			  'permission_callback' => array( $this, 'checkValidPermission' ),
+			));
+		});
+
+		add_action( 'rest_api_init', function () {
+			register_rest_route( 'api/v1', '/createOrderFromCart', array(
+			  'methods' => 'POST',
+			  'callback' => array( $this, 'createOrderFromCart' ),
+			  'permission_callback' => array( $this, 'checkValidPermission' ),
+			));
+		});
+
+		add_action( 'rest_api_init', function () {
 			register_rest_route( 'api/v1', '/setWebhook', array(
 			  'methods' => 'POST',
 			  'callback' => array( $this, 'setWebhook' ),
@@ -167,6 +207,11 @@ class H24_Cart_Abandonment {
 				'/wp-json/api/v1/getOrdersByPhone',
 				'/wp-json/api/v1/getOrderByID',
 				'/wp-json/api/v1/updateOrderStatus',
+				'/wp-json/api/v1/addOrderNote',
+				'/wp-json/api/v1/refundOrder',
+				'/wp-json/api/v1/addDiscountToOrder',
+				'/wp-json/api/v1/markOrderAsPaid',
+				'/wp-json/api/v1/createOrderFromCart',
 				'/wp-json/api/v1/setWebhook',
 				'/wp-json/api/v1/deleteWebhook',
 				'/wp-json/api/v1/deleteWebhooks',
@@ -228,6 +273,16 @@ class H24_Cart_Abandonment {
 			$chat_button_enabled = "enabled";
 		}
 
+		$chat_button_theme_color = $this->get_h24_setting_by_meta('chat_button_theme_color');
+		if($chat_button_theme_color == null) {
+			$chat_button_theme_color = '#000075';
+		}
+
+		$chat_button_theme_color_gradient = $this->get_h24_setting_by_meta('chat_button_theme_color_gradient');
+		if($chat_button_theme_color_gradient == null) {
+			$chat_button_theme_color_gradient = '#000075';
+		}
+
 		$chat_button_title = $this->get_h24_setting_by_meta('chat_button_title');
 		if($chat_button_title == null) {
 			$chat_button_title = 'Need Help ?';
@@ -256,6 +311,16 @@ class H24_Cart_Abandonment {
 		$chat_button_message = $this->get_h24_setting_by_meta('chat_button_message');
 		if($chat_button_message == null) {
 			$chat_button_message = 'Hi';
+		}
+
+		$chat_button_position = $this->get_h24_setting_by_meta('chat_button_position');
+		if($chat_button_position == null) {
+			$chat_button_position = 'right';
+		}
+
+		$chat_button_bottom = $this->get_h24_setting_by_meta('chat_button_bottom');
+		if($chat_button_bottom == null) {
+			$chat_button_bottom = '40';
 		}
 
 		if ($shop_name == "")
@@ -356,6 +421,9 @@ class H24_Cart_Abandonment {
 	}
 
 	public function webhook_setting_script() {
+		wp_enqueue_style( 'wp-color-picker');
+		wp_enqueue_script( 'wp-color-picker' );
+
 		$current_user        = wp_get_current_user();
 		$roles               = $current_user->roles;
 		$role                = array_shift( $roles );
@@ -496,8 +564,8 @@ class H24_Cart_Abandonment {
 					$woocommerce->cart->add_to_cart( $id, $qty, $cart_item['variation_id'], $variation_data, $cart_item_data );
 				}
 
-				if ( isset( $token_data['h24_coupon_code'] ) && ! $woocommerce->cart->applied_coupons ) {
-					$woocommerce->cart->add_discount( $token_data['h24_coupon_code'] );
+				if ( isset( $token_data['h24_coupon_codes'] ) && ! $woocommerce->cart->applied_coupons ) {
+					$woocommerce->cart->add_discount( $token_data['h24_coupon_codes'] );
 				}
 			}
 			$other_fields = unserialize( $result->other_fields );
@@ -532,6 +600,12 @@ class H24_Cart_Abandonment {
 
 			// Retrieving cart total value and currency.
 			$cart_total = WC()->cart->total;
+			$cart_total_tax = WC()->cart->get_total_tax();
+			$cart_subtotal = WC()->cart->get_subtotal();
+			$cart_subtotal_tax = WC()->cart->get_subtotal_tax();
+			$cart_shipping_total = WC()->cart->get_shipping_total();
+			$cart_fee_total = WC()->cart->get_fee_total();
+			$cart_discount_total = WC()->cart->get_discount_total();
 
 			// Retrieving cart products and their quantities.
 			$products     = WC()->cart->get_cart();
@@ -559,14 +633,50 @@ class H24_Cart_Abandonment {
 				'h24_location'            => $post_data['h24_country'] . ', ' . $post_data['h24_city'],
 			);
 
+			$coupons = WC()->cart->get_coupons();
+
+			$coupon_codes = array();
+
+			foreach ( $coupons as $coupon ) {
+				$codeStr = $coupon->get_code();
+				$coupon_codes[] = $codeStr;
+			}
+
+			$shipping_methods = WC()->cart->calculate_shipping();
+
+			$shipping_methods_formatted = array();
+
+			foreach($shipping_methods as $shipping_method) {
+				$shipping_method_formatted = array(
+					'id'   			=>  $shipping_method->get_id(),
+					'instance_id'   =>  $shipping_method->get_instance_id(),
+					'label'   		=>  $shipping_method->get_label(),
+					'meta_data'  	=>  $shipping_method->get_meta_data(),
+					'method_id'   	=>  $shipping_method->get_method_id(),
+					'taxes'   		=>  $shipping_method->get_taxes(),
+					'shipping_tax'  =>  $shipping_method->get_shipping_tax(),
+					'cost'  		=>  $shipping_method->get_cost(),
+				);
+
+				$shipping_methods_formatted[] = $shipping_method_formatted;
+			}
+
 			$checkout_details = array(
-				'email'         => $post_data['h24_email'],
-				'cart_contents' => serialize( $products ),
-				'cart_total'    => sanitize_text_field( $cart_total ),
-				'time'          => sanitize_text_field( $current_time ),
-				'local_time'          => sanitize_text_field( $local_time ),
-				'other_fields'  => serialize( $other_fields ),
-				'checkout_id'   => $post_data['h24_post_id'],
+				'email'         		=> $post_data['h24_email'],
+				'cart_contents' 		=> serialize( $products ),
+				'cart_total'    		=> sanitize_text_field( $cart_total ),
+				'cart_total_tax'    	=> sanitize_text_field( $cart_total_tax ),
+				'cart_subtotal'    		=> sanitize_text_field( $cart_subtotal ),
+				'cart_subtotal_tax'    	=> sanitize_text_field( $cart_subtotal_tax ),
+				'cart_shipping_total'   => sanitize_text_field( $cart_shipping_total ),
+				'cart_fee_total'    	=> sanitize_text_field( $cart_fee_total ),
+				'cart_discount_total'   => sanitize_text_field( $cart_discount_total ),
+				'time'          		=> sanitize_text_field( $current_time ),
+				'local_time'    		=> sanitize_text_field( $local_time ),
+				'other_fields'  		=> serialize( $other_fields ),
+				'checkout_id'   		=> $post_data['h24_post_id'],
+				'coupon_codes'   		=> serialize($coupon_codes),
+				'shipping_methods'  	=> serialize($shipping_methods_formatted)
 			);
 		}
 		return $checkout_details;
@@ -746,6 +856,10 @@ class H24_Cart_Abandonment {
 			$this->set_h24_setting_by_meta("h24_domain_front", $response->h24DomainFront);
 			$this->set_h24_setting_by_meta("hello24_chat_mobile_link", $response->hello24ChatMobileLink);
 			$this->set_h24_setting_by_meta("hello24_chat_web_link", $response->hello24ChatWebLink);
+			if($response->hello24ChatButton !=  null) {
+				$this->set_h24_setting_by_meta("hello24_chat_button", $response->hello24ChatButton);
+			}
+
 			$this->set_h24_setting_by_meta("api_key", $api_key);
 			wp_send_json_success($response);
 		}
@@ -757,20 +871,28 @@ class H24_Cart_Abandonment {
 
 	public function h24_save_chat_button() {		
 		$chat_button_enabled = sanitize_text_field( $_POST['chat_button_enabled'] );	
+		$chat_button_theme_color = sanitize_text_field( $_POST['chat_button_theme_color'] );	
+		$chat_button_theme_color_gradient = sanitize_text_field( $_POST['chat_button_theme_color_gradient'] );	
 		$chat_button_title = sanitize_text_field( $_POST['chat_button_title'] );	
 		$chat_button_sub_title = sanitize_text_field( $_POST['chat_button_sub_title'] );	
 		$chat_button_greeting_text1 = sanitize_text_field( $_POST['chat_button_greeting_text1'] );	
 		$chat_button_greeting_text2 = sanitize_text_field( $_POST['chat_button_greeting_text2'] );	
 		$chat_button_agent_name = sanitize_text_field( $_POST['chat_button_agent_name'] );	
 		$chat_button_message = sanitize_text_field( $_POST['chat_button_message'] );	
+		$chat_button_position = sanitize_text_field( $_POST['chat_button_position'] );	
+		$chat_button_bottom = sanitize_text_field( $_POST['chat_button_bottom'] );	
 
 		$this->set_h24_setting_by_meta("chat_button_enabled", $chat_button_enabled);
+		$this->set_h24_setting_by_meta("chat_button_theme_color", $chat_button_theme_color);
+		$this->set_h24_setting_by_meta("chat_button_theme_color_gradient", $chat_button_theme_color_gradient);
 		$this->set_h24_setting_by_meta("chat_button_title", $chat_button_title);
 		$this->set_h24_setting_by_meta("chat_button_sub_title", $chat_button_sub_title);
 		$this->set_h24_setting_by_meta("chat_button_greeting_text1", $chat_button_greeting_text1);
 		$this->set_h24_setting_by_meta("chat_button_greeting_text2", $chat_button_greeting_text2);
 		$this->set_h24_setting_by_meta("chat_button_agent_name", $chat_button_agent_name);
 		$this->set_h24_setting_by_meta("chat_button_message", $chat_button_message);
+		$this->set_h24_setting_by_meta("chat_button_position", $chat_button_position);
+		$this->set_h24_setting_by_meta("chat_button_bottom", $chat_button_bottom);
 
 		wp_send_json_success();
 	}
@@ -785,199 +907,205 @@ class H24_Cart_Abandonment {
 	}
 
 	public function getWoocommerceInfo($request) {
-		$api_key = sanitize_text_field( $request->get_header('apiKey') );
-		if ($api_key == $this->get_h24_setting_by_meta('api_key')){
-			return array(
-				"currency" => get_woocommerce_currency(),
-				"woocommerceApiUrl" => get_woocommerce_api_url(''),
-				"shopName" => $this->get_h24_setting_by_meta('shop_name'),
-				"email" => $this->get_h24_setting_by_meta('email'),
-				"phoneNumber" => $this->get_h24_setting_by_meta('phone_number'),
-				"environment" => $this->get_h24_setting_by_meta('environment'),
-				"pluginActivated" => $this->get_h24_setting_by_meta('plugin_activated')
-			);
-		} else {
-			return null;
-		}
+		return array(
+			"currency" => get_woocommerce_currency(),
+			"woocommerceApiUrl" => get_woocommerce_api_url(''),
+			"shopName" => $this->get_h24_setting_by_meta('shop_name'),
+			"email" => $this->get_h24_setting_by_meta('email'),
+			"phoneNumber" => $this->get_h24_setting_by_meta('phone_number'),
+			"environment" => $this->get_h24_setting_by_meta('environment'),
+			"pluginActivated" => $this->get_h24_setting_by_meta('plugin_activated')
+		);
 	}
 
 	public function getOrderUrl($request){
-		$api_key = sanitize_text_field( $request->get_header('apiKey') );
-		if ($api_key == $this->get_h24_setting_by_meta('api_key')){
-			$order_id = sanitize_text_field( $request->get_param('orderID') );
-			$order = wc_get_order($order_id);
+		$order_id = sanitize_text_field( $request->get_param('orderID') );
+		$order = wc_get_order($order_id);
 
-			if (!$order){
-				return null;
-			}
-
-			return array(
-				"order_url" => $order->get_checkout_order_received_url()
-			);
-		} else {
-			return 'NOT AUTHORIZED';
+		if (!$order){
+			return null;
 		}
+
+		return array(
+			"order_url" => $order->get_checkout_order_received_url()
+		);
 	}
 	
 	
 	public function getAbandonedCarts($request){
-		$api_key = sanitize_text_field( $request->get_header('apiKey') );
-		if ($api_key == $this->get_h24_setting_by_meta('api_key')){
-			$startTime = sanitize_text_field( $request->get_param('startTime') );
-			$endTime = sanitize_text_field($request->get_param('endTime') );
-	
-			global $wpdb;
-			$cart_abandonment_table = $wpdb->prefix . WP_H24_ABANDONMENT_TABLE;
-			$carts                 = $wpdb->get_results(
-				$wpdb->prepare('SELECT * FROM `' . $cart_abandonment_table . '` WHERE time BETWEEN %s AND %s', $startTime, $endTime ) // phpcs:ignore
-			);
-	
-			$abandoned_carts = array();
-			
-			foreach($carts as $cart) {
+		$startTime = sanitize_text_field( $request->get_param('startTime') );
+		$endTime = sanitize_text_field($request->get_param('endTime') );
 
-				$cart_contents = unserialize($cart->cart_contents);
-				$cartFormatted = array();
+		global $wpdb;
+		$cart_abandonment_table = $wpdb->prefix . WP_H24_ABANDONMENT_TABLE;
+		$carts                 = $wpdb->get_results(
+			$wpdb->prepare('SELECT * FROM `' . $cart_abandonment_table . '` WHERE time BETWEEN %s AND %s', $startTime, $endTime ) // phpcs:ignore
+		);
 
-				foreach($cart_contents as $cart_content) {
-					$product = wc_get_product( $cart_content['product_id'] );
-					$cart_content["product_title"] = $product->get_title();
+		$abandoned_carts = array();
+		
+		foreach($carts as $cart) {
+
+			$cart_contents = unserialize($cart->cart_contents);
+			$cartFormatted = array();
+
+			foreach($cart_contents as $cart_content) {
+				$product = wc_get_product( $cart_content['product_id'] );
+				$cart_content["product_title"] = $product->get_title();
+				
+				$variation = wc_get_product($cart_content['variation_id']);
+				if($variation) {
+					$cart_content["variation"] = $variation;
+					$variation_attributes = $variation->get_variation_attributes();
+					$cart_content["variation_attributes"] = $variation_attributes;
 					
-					$variation = wc_get_product($cart_content['variation_id']);
-					if($variation) {
-						$cart_content["variation"] = $variation;
-						$variation_attributes = $variation->get_variation_attributes();
-						$cart_content["variation_attributes"] = $variation_attributes;
-						
-						$variation_title = '';
-						foreach($variation_attributes as $attribute) {
-							if($variation_title == '') {
-								$variation_title =str_replace('attribute_pa_', '', $attribute);
-							}else {
-								$variation_title = $variation_title . ' - ' .str_replace('attribute_pa_', '', $attribute);
-							}
+					$variation_title = '';
+					foreach($variation_attributes as $attribute) {
+						if($variation_title == '') {
+							$variation_title =str_replace('attribute_pa_', '', $attribute);
+						}else {
+							$variation_title = $variation_title . ' - ' .str_replace('attribute_pa_', '', $attribute);
 						}
-						
-						$cart_content["variation_title"] = $variation_title;						
 					}
 					
-					$cartFormatted[] = $cart_content;
+					$cart_content["variation_title"] = $variation_title;						
 				}
-
-				$checkout_base_url = get_permalink( $cart->checkout_id );
-				$session_id_param  = array(
-					'session_id' => $cart->session_id,
-				);
 				
-				$checkout_url = add_query_arg( $session_id_param, $checkout_base_url );
-		
-				$abandoned_cart = array(
-					'id'         	=> $cart->id,
-					'checkout_id'   => $cart->checkout_id,
-					'checkout_url'	=> $checkout_url,
-					'email'         => $cart->email,
-					'line_items' 	=> $cartFormatted,
-					'cart_total'    => $cart->cart_total,
-					'session_id' 	=> $cart->session_id,
-					'other_fields'  => unserialize($cart->other_fields),
-					'order_status'  => $cart->order_status,
-					'unsubscribed'  => $cart->unsubscribed,
-					'coupon_code'  	=> $cart->coupon_code,
-					'time'          => $cart->time,
-					'local_time'      => $cart->local_time,
-				);
-
-				$abandoned_carts[] = $abandoned_cart;
+				$cartFormatted[] = $cart_content;
 			}
-			
-			return array(
-				"abandoned_carts" => $abandoned_carts
+
+			$checkout_base_url = get_permalink( $cart->checkout_id );
+			$session_id_param  = array(
+				'session_id' => $cart->session_id,
 			);
-		} else {
-			return 'NOT AUTHORIZED';
+			
+			$checkout_url = add_query_arg( $session_id_param, $checkout_base_url );
+
+			$abandoned_cart = array(
+				'id'         			=> $cart->id,
+				'checkout_id'   		=> $cart->checkout_id,
+				'checkout_url'			=> $checkout_url,
+				'email'         		=> $cart->email,
+				'line_items' 			=> $cartFormatted,
+				'cart_total'    		=> $cart->cart_total,
+				'cart_total_tax'    	=> $cart->cart_total_tax,
+				'cart_subtotal'    		=> $cart->cart_subtotal,
+				'cart_subtotal_tax' 	=> $cart->cart_subtotal_tax,
+				'cart_shipping_total'   => $cart->cart_shipping_total,
+				'cart_fee_total'    	=> $cart->cart_fee_total,
+				'cart_discount_total'   => $cart->cart_discount_total,
+				'session_id' 			=> $cart->session_id,
+				'other_fields'  		=> unserialize($cart->other_fields),
+				'order_status'  		=> $cart->order_status,
+				'unsubscribed'  		=> $cart->unsubscribed,
+				'coupon_codes'  		=> unserialize($cart->coupon_codes),
+				'shipping_methods'  	=> unserialize($cart->shipping_methods),
+				'time'          		=> $cart->time,
+				'local_time'   	 		=> $cart->local_time,
+			);
+
+			$abandoned_carts[] = $abandoned_cart;
 		}
+		
+		return array(
+			"code" => "SUCCESS",
+			"data" => $abandoned_carts
+		);
 	}
 
 	public function listCategories($request){
-		$api_key = sanitize_text_field( $request->get_header('apiKey') );
-		if ($api_key == $this->get_h24_setting_by_meta('api_key')){
-			$categories = get_terms(
-				array(
-					'taxonomy'   => 'product_cat',
-					'orderby'    => 'name',
-					'hide_empty' => false,
-				)
-			);
-			
-			return array(
-				"code" => "SUCCESS",
-				"data" => $categories
-			);
-		} else {
-			return array(
-				"code" => "FAILURE",
-				"data" => "NOT AUTHORIZED"
-			);
-		}
+		$categories = get_terms(
+			array(
+				'taxonomy'   => 'product_cat',
+				'orderby'    => 'name',
+				'hide_empty' => false,
+			)
+		);
+		
+		return array(
+			"code" => "SUCCESS",
+			"data" => $categories
+		);
 	}
 
 	public function listOrders($request){
-		$api_key = sanitize_text_field( $request->get_header('apiKey') );
-		if ($api_key == $this->get_h24_setting_by_meta('api_key')){
-			$params = $this->wporg_recursive_sanitize_text_field( $request->get_params() );
-	
-			$query = new WC_Order_Query($params);
-			
-			$orders = $query->get_orders();
-			$orderDatas = array();
-			
-			foreach($orders as $order) {
-				$order_data = $order->get_data(); // The Order data
-				$orderDatas[] = $order_data;
+		$params = $this->wporg_recursive_sanitize_text_field( $request->get_params() );
+
+		$query = new WC_Order_Query($params);
+		
+		$orders = $query->get_orders();
+		$orderDatas = array();
+		
+		foreach($orders as $order) {
+			$order_data = $order->get_data(); // The Order data
+			$order_data['line_items'] = $this->getLineItemsData($order);
+			$orderDatas[] = $order_data;
+		}
+		
+		return array(
+			"code" => "SUCCESS",
+			"data" => $orderDatas
+		);
+	}
+
+	public function getLineItemsData($order) {
+		$itemDatas = array();
+
+		// Get and Loop Over Order Items
+		foreach ( $order->get_items() as $item_id => $item ) {
+			$itemData = array();
+
+			$itemData['id'] = $item->get_id();
+			$itemData['product_id'] = $item->get_product_id();
+			$itemData['variation_id'] = $item->get_variation_id();
+
+			$product = $item->get_product();
+			$itemData['product_attributes'] = $product->get_attributes();
+
+			if($itemData['variation_id'] != 0) {
+				$product_variation = wc_get_product( $itemData['variation_id'] );
+				$itemData['variation_attributes'] = $product_variation->get_attributes();
 			}
 			
-			return array(
-				"code" => "SUCCESS",
-				"data" => $orderDatas
-			);
-		} else {
-			return array(
-				"code" => "FAILURE",
-				"data" => "NOT AUTHORIZED"
-			);
+			$itemData['product_name'] = $item->get_name();
+			$itemData['quantity'] = $item->get_quantity();
+
+			$itemData['subtotal'] = $item->get_subtotal();
+			$itemData['total'] = $item->get_total();
+			$itemData['tax'] = $item->get_subtotal_tax();
+			$itemData['tax_class'] = $item->get_tax_class();
+			$itemData['tax_status'] = $item->get_tax_status();
+			$itemData['item_type'] = $item->get_type();
+			$itemData['meta_data'] = $item->get_meta_data();
+
+			$itemDatas[] = $itemData;
 		}
+
+		return $itemDatas;
 	}
 
 	public function listProducts($request){
-		$api_key = sanitize_text_field( $request->get_header('apiKey') );
-		if ($api_key == $this->get_h24_setting_by_meta('api_key')){
-			$params = $this->wporg_recursive_sanitize_text_field( $request->get_params() );
-	
-			$query = new WC_Product_Query($params);
-			
-			$products = $query->get_products();
-			$productDatas = array();
-			
-			foreach($products as $product) {
-				$product_data = $product->get_data(); // The Order data
+		$params = $this->wporg_recursive_sanitize_text_field( $request->get_params() );
 
-				if ($product->get_type() == "variable") {
-					$product_data["variations"] = $product->get_available_variations();
-				}
+		$query = new WC_Product_Query($params);
+		
+		$products = $query->get_products();
+		$productDatas = array();
+		
+		foreach($products as $product) {
+			$product_data = $product->get_data(); // The Order data
 
-				$productDatas[] = $product_data;
+			if ($product->get_type() == "variable") {
+				$product_data["variations"] = $product->get_available_variations();
 			}
-			
-			return array(
-				"code" => "SUCCESS",
-				"data" => $productDatas
-			);
-		} else {
-			return array(
-				"code" => "FAILURE",
-				"data" => "NOT AUTHORIZED"
-			);
+
+			$productDatas[] = $product_data;
 		}
+		
+		return array(
+			"code" => "SUCCESS",
+			"data" => $productDatas
+		);
 	}
 
 	public function wporg_recursive_sanitize_text_field( $array ) {
@@ -992,133 +1120,452 @@ class H24_Cart_Abandonment {
 	}
 
 	public function getOrdersByPhone($request){
-		$api_key = sanitize_text_field( $request->get_header('apiKey') );
-		if ($api_key == $this->get_h24_setting_by_meta('api_key')){
-			$phone = sanitize_text_field( $request->get_param('phone') );
-			$limit = sanitize_text_field( $request->get_header('limit') );
-	
-			$query = new WC_Order_Query( array(
-				'limit' => $limit,
-				'orderby' => 'date',
-				'order' => 'DESC',
-				'billing_phone' => $phone,
-			));
-			
-			$orders = $query->get_orders();
-			$orderDatas = array();
-			
-			foreach($orders as $order) {
-				$order_data = $order->get_data(); // The Order data
-				$orderDatas[] = $order_data;
-			}
-			
-			return $orderDatas;
-		} else {
-			return 'NOT AUTHORIZED';
+		$phone = sanitize_text_field( $request->get_param('phone') );
+		$limit = sanitize_text_field( $request->get_header('limit') );
+
+		$query = new WC_Order_Query( array(
+			'limit' => $limit,
+			'orderby' => 'date',
+			'order' => 'DESC',
+			'billing_phone' => $phone,
+		));
+		
+		$orders = $query->get_orders();
+		$orderDatas = array();
+		
+		foreach($orders as $order) {
+			$order_data = $order->get_data(); // The Order data
+			$order_data['line_items'] = $this->getLineItemsData($order);
+			$orderDatas[] = $order_data;
 		}
+		
+		return $orderDatas;
 	}
 	
 	public function getOrderByID($request){
-		$api_key = sanitize_text_field( $request->get_header('apiKey') );
-		if ($api_key == $this->get_h24_setting_by_meta('api_key')){
-			$order_id = sanitize_text_field( $request->get_param('orderID') );	
-			$order = wc_get_order( $order_id );
-			if($order == false) {
-				return array(
-					"code" => "FAILURE",
-					"data" => "No order found with provided order ID"
-				);
-			}else {
-				return array(
-					"code" => "SUCCESS",
-					"data" => $order->get_data()
-				);
-			}
-		} else {
-			return 'NOT AUTHORIZED';
+		$order_id = sanitize_text_field( $request->get_param('orderID') );	
+		$order = wc_get_order( $order_id );
+		$order_data = $order->get_data();
+		$order_data['line_items'] = $this->getLineItemsData($order);
+
+		if($order == false) {
+			return array(
+				"code" => "FAILURE",
+				"data" => "No order found with provided order ID"
+			);
+		}else {
+			return array(
+				"code" => "SUCCESS",
+				"data" => $order_data
+			);
 		}
 	}
 
 	public function updateOrderStatus($request){
-		$api_key = sanitize_text_field( $request->get_header('apiKey') );
-		if ($api_key == $this->get_h24_setting_by_meta('api_key')){
-			$order_id = sanitize_text_field( $request->get_param('orderID') );	
-			$status = sanitize_text_field( $request->get_param('status') );	
-			$order = wc_get_order( $order_id );
-			$order->update_status($status); 
+		$order_id = sanitize_text_field( $request->get_param('orderID') );	
+		$status = sanitize_text_field( $request->get_param('status') );	
+		$order = wc_get_order( $order_id );
+		$order->update_status($status); 
+
+		$order_data = $order->get_data();
+		$order_data['line_items'] = $this->getLineItemsData($order);
+
+		return array(
+			"code" => "SUCCESS",
+			"data" => $order_data
+		);
+	}
+
+	public function markOrderAsPaid($request){
+		$order_id = sanitize_text_field( $request->get_param('orderID') );	
+		$payment_gateway_id = sanitize_text_field( $request->get_param('paymentGatewayID') );	
+		$status = sanitize_text_field( $request->get_param('status') );	
+		$order = wc_get_order( $order_id );
+		$order->update_status($status); 
+
+			
+		$payment_gateways = WC()->payment_gateways->payment_gateways();
+		// add payment method
+		$order->set_payment_method($payment_gateways[$payment_gateway_id]);
+		$order->save();
+
+		$order_data = $order->get_data();
+		$order_data['line_items'] = $this->getLineItemsData($order);
+
+		return array(
+			"code" => "SUCCESS",
+			"data" => $order_data
+		);
+	}
+
+	public function addOrderNote($request){
+		$order_id = sanitize_text_field( $request->get_param('orderID') );	
+		$note = sanitize_text_field( $request->get_param('note') );	
+		$order = wc_get_order( $order_id );
+		$order->add_order_note($note); 
+
+		$order_data = $order->get_data();
+		$order_data['line_items'] = $this->getLineItemsData($order);
+
+		return array(
+			"code" => "SUCCESS",
+			"data" => $order_data
+		);
+	}
+
+	public function refundOrder( $request) {
+		$order_id = sanitize_text_field( $request->get_param('orderID') );	
+		$refund_reason = sanitize_text_field( $request->get_param('refundReason') );	
+		$order  = wc_get_order( $order_id );
+	
+		// If it's something else such as a WC_Order_Refund, we don't want that.
+		if( ! is_a( $order, 'WC_Order') ) {
 			return array(
-				"code" => "SUCCESS"
-			);
-		} else {
-			return array(
-				"code" => "FAILURE"
+				"code" => "FAILURE",
+				"data" => "Order ID is not valid."
 			);
 		}
+		
+		if( 'refunded' == $order->get_status() ) {
+			return array(
+				"code" => "FAILURE",
+				"data" => "Order ID is not valid."
+			);
+		}
+			
+		// Get Items
+		$order_items   = $order->get_items();
+		
+		// Refund Amount
+		$refund_amount = 0;
+		
+		// Prepare line items which we are refunding
+		$line_items = array();
+		
+		if ( $order_items ) {
+			foreach( $order_items as $item_id => $item ) {
+				
+				$item_meta 	= $order->get_item_meta( $item_id );
+				
+				$tax_data = $item_meta['_line_tax_data'];
+				
+				$refund_tax = 0;
+		
+				if( is_array( $tax_data[0] ) ) {
+		
+				$refund_tax = array_map( 'wc_format_decimal', $tax_data[0] );
+		
+				}
+		
+				$refund_amount = wc_format_decimal( $refund_amount ) + wc_format_decimal( $item_meta['_line_total'][0] );
+		
+				$line_items[ $item_id ] = array( 
+				'qty' => $item_meta['_qty'][0], 
+				'refund_total' => wc_format_decimal( $item_meta['_line_total'][0] ), 
+				'refund_tax' =>  $refund_tax );
+				
+			}
+		}
+
+		$refund = wc_create_refund( 
+			array(
+				'amount'         => $refund_amount,
+				'reason'         => $refund_reason,
+				'order_id'       => $order_id,
+				'line_items'     => $line_items,
+				'refund_payment' => true
+				)
+		);
+	
+		return array(
+			"code" => "SUCCESS",
+			"data" => $refund
+		);
+	}
+
+	public function addDiscountToOrder($request){
+		$order_id = sanitize_text_field( $request->get_param('orderID') );	
+		$title = sanitize_text_field( $request->get_param('title') );	
+		$amount = sanitize_text_field( $request->get_param('amount') );	
+
+		$this->wc_order_add_discount( $order_id, $title, $amount );
+
+		$order = wc_get_order( $order_id );
+
+		$order_data = $order->get_data();
+		$order_data['line_items'] = $this->getLineItemsData($order);
+
+		return array(
+			"code" => "SUCCESS",
+			"data" => $order_data
+		);
+	}
+
+	public function createOrderFromCart($request){
+		$cart = $request->get_param('cart');	
+		$payment_gateway_id = $request->get_param('paymentGatewayID');	
+		$discount_title = $request->get_param('discountTitle');
+		$discount_percent = $request->get_param('discountPercent');		
+		$flat_discount_amount = $request->get_param('flatDiscountAmount');	
+		$is_free_shipping = $request->get_param('isFreeShipping');	
+		$note = $request->get_param('note');	
+		
+		if($payment_gateway_id == null) {
+			return array(
+				"code" => "FAILURE",
+				"data" => "payment_gateway_id input not given"
+			);
+		}
+
+		if($cart) {
+			$order = wc_create_order();
+			$line_items = $cart['line_items'];
+	
+			foreach($line_items as $line_item) {
+				$quantity = $line_item['quantity'];
+				$product_id = $line_item['product_id'];
+				$variation_id = $line_item['variation_id'];
+				if($variation_id == 0) {
+					$order->add_product( wc_get_product( $product_id ), $quantity );
+				}else {
+					$order->add_product( wc_get_product( $variation_id ), $quantity );
+				}
+			}
+	
+			$other_fields = $cart['other_fields'];
+			$email = $cart['email'];
+			$phone = $other_fields['h24_phone_number'];
+	
+			// add billing and shipping addresses
+			$shipping_address = array(
+				'first_name' => $other_fields['h24_shipping_first_name'],
+				'last_name'  => $other_fields['h24_shipping_last_name'],
+				'company'    => $other_fields['h24_shipping_company'],
+				'address_1'  => $other_fields['h24_shipping_address_1'],
+				'address_2'  => $other_fields['h24_shipping_address_2'],
+				'city'       => $other_fields['h24_shipping_city'],
+				'state'      => $other_fields['h24_shipping_state'],
+				'postcode'   => $other_fields['h24_shipping_postcode'],
+				'country'    => $other_fields['h24_shipping_country'],
+				'email'      => $email,
+				'phone'      => $phone
+			);
+	
+			$order->set_address( $shipping_address, 'shipping' );
+			$order->set_address( $shipping_address, 'billing' );
+	
+			if($is_free_shipping == false) {
+				$shipping_methods = $cart['shipping_methods'];
+
+				// add shipping
+				foreach($shipping_methods as $shipping_method) {
+					$shipping_method_label = $shipping_method['label'];
+					$shipping_method_id = $shipping_method['id'];
+					$shipping_method_cost = floatval($shipping_method['cost']);
+	
+					$shipping = new WC_Order_Item_Shipping();
+					$shipping->set_method_title( $shipping_method_label );
+					$shipping->set_method_id( $shipping_method_id ); // set an existing Shipping method ID
+					$shipping->set_total( $shipping_method_cost ); // optional
+					$order->add_item( $shipping );
+				}
+			}
+	
+			$coupon_codes = $cart['coupon_codes'];
+			if($coupon_codes) {
+				// $coupon_codes = explode (",", $coupon_code); 
+				foreach($coupon_codes as $codeStr) {
+					$order->apply_coupon($codeStr);
+				}
+			}
+	
+			$payment_gateways = WC()->payment_gateways->payment_gateways();
+			// add payment method
+			$order->set_payment_method($payment_gateways[$payment_gateway_id]);
+			
+			// $order->calculate_shipping();
+	
+			// calculate and save
+			$order->calculate_totals();
+	
+			if($note == null) {
+				$note = 'Order is created from cart';
+			}
+
+			// order status
+			$order->set_status( 'wc-processing', $note );
+				
+			if($discount_title == null) {
+				$discount_title = 'Discount';
+			}
+
+			if($discount_percent != null) {
+				$discount_percent_str = '' . $discount_percent . '%';
+				$this->wc_order_add_discount( $order->get_id(), $discount_title, $discount_percent_str );
+			}else if($flat_discount_amount != null) {
+				$this->wc_order_add_discount( $order->get_id(), $discount_title, $flat_discount_amount );
+			}
+
+			$order->save();
+
+			$order_data = $order->get_data();
+			$order_data['line_items'] = $this->getLineItemsData($order);
+	
+			return array(
+				"code" => "SUCCESS",
+				"data" => $order_data
+			);
+		}else {
+			return array(
+				"code" => "FAILURE",
+				"data" => "Input cart is not valid."
+			);
+		}
+
+	}
+
+	public function get_available_shipping_methods(){
+
+        if ( ! class_exists( 'WC_Shipping_Zones' ) ) {
+            return array();
+        }
+
+        $zones = WC_Shipping_Zones::get_zones();
+
+        if ( ! is_array( $zones ) ) {
+            return array();
+        }
+
+        $shipping_methods = array_column( $zones, 'shipping_methods' );
+
+        $flatten = array_merge( ...$shipping_methods );
+
+        $normalized_shipping_methods = array();
+
+        foreach ( $flatten as $key => $class ) {
+            $normalized_shipping_methods[ $class->id ] = array(
+				'title' => $class->method_title, 
+				'fee' => $class->fee,
+				'enabled' => $class->enabled,
+				'rates' => $class->rates,
+				'minimum_fee' => $class->minimum_fee,
+				'countries' => $class->countries,
+			);
+        }
+
+        return $normalized_shipping_methods;
+
+    }
+
+	/**
+	 * Add a discount to an Orders programmatically
+	 * (Using the FEE API - A negative fee)
+	 *
+	 * @since  3.2.0
+	 * @param  int     $order_id  The order ID. Required.
+	 * @param  string  $title  The label name for the discount. Required.
+	 * @param  mixed   $amount  Fixed amount (float) or percentage based on the subtotal. Required.
+	 * @param  string  $tax_class  The tax Class. '' by default. Optional.
+	 */
+	public function wc_order_add_discount( $order_id, $title, $amount, $tax_class = '' ) {
+		$order    = wc_get_order($order_id);
+		// $subtotal = $order->get_subtotal();
+		$total = $order->get_total();
+
+		$item     = new WC_Order_Item_Fee();
+
+		if ( strpos($amount, '%') !== false ) {
+			$percentage = (float) str_replace( array('%', ' '), array('', ''), $amount );
+			$percentage = $percentage > 100 ? -100 : -$percentage;
+			$discount   = $percentage * $total / 100;
+		} else {
+			$discount = (float) str_replace( ' ', '', $amount );
+			if($discount > $total) {
+				return;
+			}else {
+				$discount = -$discount;
+			}
+		}
+
+		$item->set_tax_class( $tax_class );
+		$item->set_name( $title );
+		$item->set_amount( $discount );
+		$item->set_total( $discount );
+
+		if ( '0' !== $item->get_tax_class() && 'taxable' === $item->get_tax_status() && wc_tax_enabled() ) {
+			$tax_for   = array(
+				'country'   => $order->get_shipping_country(),
+				'state'     => $order->get_shipping_state(),
+				'postcode'  => $order->get_shipping_postcode(),
+				'city'      => $order->get_shipping_city(),
+				'tax_class' => $item->get_tax_class(),
+			);
+			$tax_rates = WC_Tax::find_rates( $tax_for );
+			$taxes     = WC_Tax::calc_tax( $item->get_total(), $tax_rates, false );
+			print_pr($taxes);
+
+			if ( method_exists( $item, 'get_subtotal' ) ) {
+				$subtotal_taxes = WC_Tax::calc_tax( $item->get_subtotal(), $tax_rates, false );
+				$item->set_taxes( array( 'total' => $taxes, 'subtotal' => $subtotal_taxes ) );
+				$item->set_total_tax( array_sum($taxes) );
+			} else {
+				$item->set_taxes( array( 'total' => $taxes ) );
+				$item->set_total_tax( array_sum($taxes) );
+			}
+			$has_taxes = true;
+		} else {
+			$item->set_taxes( false );
+			$has_taxes = false;
+		}
+		$item->save();
+
+		$order->add_item( $item );
+		$order->calculate_totals( $has_taxes );
+		$order->save();
 	}
 
 	public function setWebhook($request){
-		$api_key = sanitize_text_field( $request->get_header('apiKey') );
-		if ($api_key == $this->get_h24_setting_by_meta('api_key')){
-			$name = sanitize_text_field( $request->get_param('name') );
+		$name = sanitize_text_field( $request->get_param('name') );
 
-			// DELETE ALREADY EXISTING WEBHOOK WITH SAME NAME
-			$this->deleteWebhookWithName($name);
+		// DELETE ALREADY EXISTING WEBHOOK WITH SAME NAME
+		$this->deleteWebhookWithName($name);
 
-			$topic = sanitize_text_field( $request->get_param('topic') );
-			$callbackUrl = sanitize_text_field( $request->get_param('callbackUrl') );
-			$userID = $this->get_h24_setting_by_meta('user_id');
+		$topic = sanitize_text_field( $request->get_param('topic') );
+		$callbackUrl = sanitize_text_field( $request->get_param('callbackUrl') );
+		$userID = $this->get_h24_setting_by_meta('user_id');
 
-			$webhook = new WC_Webhook($this->get_h24_setting_by_meta( $name ));
-			$webhook->set_user_id( $userID ); 
-			$webhook->set_topic( $topic ); 
-			$webhook->set_delivery_url( $callbackUrl ); 
-			$webhook->set_status( "active" ); 
-			$webhook->set_name( $name );
-			$webhook->save();
-			return array(
-				"code" => "SUCCESS"
-			);
-		} else {
-			return array(
-				"code" => "NOT AUTHORIZED"
-			);		
-		}
+		$webhook = new WC_Webhook($this->get_h24_setting_by_meta( $name ));
+		$webhook->set_user_id( $userID ); 
+		$webhook->set_topic( $topic ); 
+		$webhook->set_delivery_url( $callbackUrl ); 
+		$webhook->set_status( "active" ); 
+		$webhook->set_name( $name );
+		$webhook->save();
+		return array(
+			"code" => "SUCCESS"
+		);
 	}
 
 	public function deleteWebhook($request){
-		$api_key = sanitize_text_field( $request->get_header('apiKey') );
-		if ($api_key == $this->get_h24_setting_by_meta('api_key')){
-			$name = sanitize_text_field( $request->get_param('name') );
+		$name = sanitize_text_field( $request->get_param('name') );
 
-			$this->deleteWebhookWithName($name);
+		$this->deleteWebhookWithName($name);
 
-			return array(
-				"code" => "SUCCESS"
-			);
-		} else {
-			return array(
-				"code" => "NOT AUTHORIZED"
-			);		
-		}
+		return array(
+			"code" => "SUCCESS"
+		);
 	}
 	
 	public function updateSettings($request){
-		$api_key = sanitize_text_field( $request->get_header('apiKey') );
-		if ($api_key == $this->get_h24_setting_by_meta('api_key')){
-			$params = $this->wporg_recursive_sanitize_text_field( $request->get_params() );
+		$params = $this->wporg_recursive_sanitize_text_field( $request->get_params() );
 
-			foreach ( $params as $param_key => $param_value ) {
-				$this->set_h24_setting_by_meta($param_key, $param_value);
-			}
-
-			return array(
-				"code" => "SUCCESS"
-			);
-		} else {
-			return array(
-				"code" => "NOT AUTHORIZED"
-			);		
+		foreach ( $params as $param_key => $param_value ) {
+			$this->set_h24_setting_by_meta($param_key, $param_value);
 		}
+
+		return array(
+			"code" => "SUCCESS"
+		);
 	}
 
 	public function deleteWebhookWithName($name){
@@ -1134,17 +1581,10 @@ class H24_Cart_Abandonment {
 	}
 
 	public function deleteWebhooks($request){
-		$api_key = sanitize_text_field( $request->get_header('apiKey') );
-		if ($api_key == $this->get_h24_setting_by_meta('api_key')){
-			$this->deleteAllHello24Webhooks();
-			return array(
-				"code" => "SUCCESS"
-			);
-		} else {
-			return array(
-				"code" => "FAILURE"
-			);		
-		}
+		$this->deleteAllHello24Webhooks();
+		return array(
+			"code" => "SUCCESS"
+		);
 	}
 
 	public function deleteAllHello24Webhooks() {
@@ -1169,6 +1609,20 @@ class H24_Cart_Abandonment {
 		$chat_button_title = $this->get_h24_setting_by_meta('chat_button_title');
 		if($chat_button_title == null) {
 			$chat_button_title = 'Need Help ?';
+		}
+
+		$chat_button_theme_color = $this->get_h24_setting_by_meta('chat_button_theme_color');
+		if($chat_button_theme_color == null) {
+			$chat_button_theme_color = '#000075';
+		}
+
+		$chat_button_theme_color_gradient = $this->get_h24_setting_by_meta('chat_button_theme_color_gradient');
+		if($chat_button_theme_color_gradient == null) {
+			if($chat_button_theme_color != null) {
+				$chat_button_theme_color_gradient = $chat_button_theme_color;
+			}else {
+				$chat_button_theme_color_gradient = '#000075';
+			}
 		}
 
 		$chat_button_sub_title = $this->get_h24_setting_by_meta('chat_button_sub_title');
@@ -1196,10 +1650,17 @@ class H24_Cart_Abandonment {
 			$chat_button_message = 'Hi';
 		}
 
-		$hello24_chat_theme_color = $this->get_h24_setting_by_meta('hello24_chat_theme_color');
-		$hello24_chat_theme_color_gradient = $this->get_h24_setting_by_meta('hello24_chat_theme_color_gradient');
+		$chat_button_position = $this->get_h24_setting_by_meta('chat_button_position');
+		if($chat_button_position == null) {
+			$chat_button_position = 'right';
+		}
+
+		$chat_button_bottom = $this->get_h24_setting_by_meta('chat_button_bottom');
+		if($chat_button_bottom == null) {
+			$chat_button_bottom = '40';
+		}
+
 		$hello24_chat_button_size = $this->get_h24_setting_by_meta('hello24_chat_button_size');
-		$hello24_chat_button_position = $this->get_h24_setting_by_meta('hello24_chat_button_position');
 		$hello24_chat_mobile_link = $this->get_h24_setting_by_meta('hello24_chat_mobile_link');
 		$hello24_chat_web_link = $this->get_h24_setting_by_meta('hello24_chat_web_link');
 		$hello24_chat_button = $this->get_h24_setting_by_meta('hello24_chat_button');
@@ -1221,10 +1682,11 @@ class H24_Cart_Abandonment {
 				window.hello24_agentName = "' . esc_attr($chat_button_agent_name) . '";
 				window.hello24_message = "' . esc_attr($chat_button_message) . '";
 				
-				window.hello24_chat_theme_color = "' . esc_attr($hello24_chat_theme_color) . '";
-				window.hello24_chat_theme_color_gradient = "' . esc_attr($hello24_chat_theme_color_gradient) . '";
+				window.hello24_chat_theme_color = "' . esc_attr($chat_button_theme_color) . '";
+				window.hello24_chat_theme_color_gradient = "' . esc_attr($chat_button_theme_color_gradient) . '";
 				window.hello24_chat_button_size = "' . esc_attr($hello24_chat_button_size) . '";
-				window.hello24_chat_button_position = "' . esc_attr($hello24_chat_button_position) . '";
+				window.hello24_chat_button_position = "' . esc_attr($chat_button_position) . '";
+				window.hello24_chat_button_bottom = "' . esc_attr($chat_button_bottom) . '";
 				window.hello24_chat_mobile_link = "' . esc_url($hello24_chat_mobile_link) . '";
 				window.hello24_chat_web_link = "' . esc_url($hello24_chat_web_link) . '";
 				window.hello24_chat_button = "' . esc_attr($hello24_chat_button) . '";

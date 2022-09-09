@@ -38,6 +38,14 @@ Released On: 09, AUGUST 2022
             hello24_chat_button_size_inside_px = "32px";
         }
 
+        var hello24_chat_button_bottom = window.hello24_chat_button_bottom || '40';
+        var hello24_chat_popup_bottom = parseInt(hello24_chat_button_bottom) + 60;
+        hello24_chat_popup_bottom = `${hello24_chat_popup_bottom}`;
+
+        var hello24_chat_button_bottom_px = `${hello24_chat_button_bottom}px`;
+        var hello24_chat_popup_bottom_px = `${hello24_chat_popup_bottom}px`;
+
+
         var default_hello24_chat_button = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMWVtIiBoZWlnaHQ9IjFlbSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHN0eWxlPSItbXMtdHJhbnNmb3JtOiByb3RhdGUoMzYwZGVnKTsgLXdlYmtpdC10cmFuc2Zvcm06IHJvdGF0ZSgzNjBkZWcpOyB0cmFuc2Zvcm06IHJvdGF0ZSgzNjBkZWcpOyI+PHBhdGggZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIzMiIgZD0iTTQwOCA2NEgxMDRhNTYuMTYgNTYuMTYgMCAwIDAtNTYgNTZ2MTkyYTU2LjE2IDU2LjE2IDAgMCAwIDU2IDU2aDQwdjgwbDkzLjcyLTc4LjE0YTggOCAwIDAgMSA1LjEzLTEuODZINDA4YTU2LjE2IDU2LjE2IDAgMCAwIDU2LTU2VjEyMGE1Ni4xNiA1Ni4xNiAwIDAgMC01Ni01NloiLz48Y2lyY2xlIGN4PSIxNjAiIGN5PSIyMTYiIHI9IjMyIiBmaWxsPSJ3aGl0ZSIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjIxNiIgcj0iMzIiIGZpbGw9IndoaXRlIi8+PGNpcmNsZSBjeD0iMzUyIiBjeT0iMjE2IiByPSIzMiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=`;
         var hello24_companyName = window.hello24_companyName || "Hello24";
         var hello24_title = window.hello24_title || "Need help?";
@@ -138,7 +146,7 @@ Released On: 09, AUGUST 2022
                 position: fixed;
                 width: ${hello24_chat_button_size_px};
                 height: ${hello24_chat_button_size_px};
-                bottom: 40px;
+                bottom: ${hello24_chat_button_bottom_px};
                 ${hello24_chat_button_position}: 20px;
                 border: 1px solid #fff;
                 border-radius: 50px;
@@ -169,7 +177,7 @@ Released On: 09, AUGUST 2022
                 display: none;
                 position: fixed;
                 width: 300px;
-                bottom: 100px;
+                bottom: ${hello24_chat_popup_bottom_px};
                 ${hello24_chat_button_position}: 30px;
                 border-radius: 10px;
                 box-shadow: 0 3px 6px #b4b4b4;

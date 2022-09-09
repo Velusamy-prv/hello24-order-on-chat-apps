@@ -78,11 +78,18 @@ class H24_Cart_Abandonment_Db {
 				email VARCHAR(100),
 				cart_contents LONGTEXT,
 				cart_total DECIMAL(10,2),
+				cart_total_tax DECIMAL(10,2),
+				cart_subtotal DECIMAL(10,2),
+				cart_subtotal_tax DECIMAL(10,2),
+				cart_shipping_total DECIMAL(10,2),
+				cart_fee_total DECIMAL(10,2),
+				cart_discount_total DECIMAL(10,2),
 				session_id VARCHAR(60) NOT NULL,
 				other_fields LONGTEXT,
 				order_status ENUM( 'normal','abandoned','completed','lost') NOT NULL DEFAULT 'normal',
 				unsubscribed  boolean DEFAULT 0,
-				coupon_code VARCHAR(50),
+				coupon_codes LONGTEXT,
+				shipping_methods LONGTEXT,
 				time DATETIME DEFAULT NULL,
 				local_time DATETIME DEFAULT NULL,
 				PRIMARY KEY  (`id`, `session_id`),
@@ -116,6 +123,7 @@ class H24_Cart_Abandonment_Db {
 			$meta_data["chat_button_greeting_text2"] = "How can I help you?";
 			$meta_data["chat_button_agent_name"] = "Customer Support";
 			$meta_data["chat_button_message"] = "Hi";
+			$meta_data["chat_button_position"] = "right";
 
 			foreach ( $meta_data as $meta_key => $meta_value ) {
 				$wpdb->query(
