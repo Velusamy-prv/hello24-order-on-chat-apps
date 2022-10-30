@@ -85,6 +85,14 @@ class H24_Cart_Abandonment {
 		});
 
 		add_action( 'rest_api_init', function () {
+			register_rest_route( 'api/v1', '/getCategoryByID', array(
+			  'methods' => 'POST',
+			  'callback' => array( $this, 'getCategoryByID' ),
+			  'permission_callback' => array( $this, 'checkValidPermission' ),
+			));
+		});
+		
+		add_action( 'rest_api_init', function () {
 			register_rest_route( 'api/v1', '/listCategories', array(
 			  'methods' => 'POST',
 			  'callback' => array( $this, 'listCategories' ),
@@ -202,6 +210,7 @@ class H24_Cart_Abandonment {
 				'/wp-json/api/v1/getOrderUrl',
 				'/wp-json/api/v1/getAbandonedCarts',
 				'/wp-json/api/v1/listProducts',
+				'/wp-json/api/v1/getCategoryByID',
 				'/wp-json/api/v1/listCategories',
 				'/wp-json/api/v1/listOrders',
 				'/wp-json/api/v1/getOrdersByPhone',
@@ -1022,9 +1031,31 @@ class H24_Cart_Abandonment {
 			)
 		);
 		
+		$formatted_categories = array();
+
+		foreach($categories as $category) {
+			$thumbnail_id = get_term_meta( $category->term_id, 'thumbnail_id', true ); 
+			$image = null;
+			if($thumbnail_id != null || $thumbnail_id != false) {
+				$image = $this->get_image_by_id($thumbnail_id);
+			}
+
+			$formatted_category = array(
+				"id" => $category->term_id,
+				"parent" => $category->parent,
+				"name" => $category->name,
+				"slug" => $category->slug,
+				"description" => $category->description,
+				"image" => $image,
+				"count" => $category->count
+			);
+
+			$formatted_categories[] = $formatted_category;
+		}
+
 		return array(
 			"code" => "SUCCESS",
-			"data" => $categories
+			"data" => $formatted_categories
 		);
 	}
 
@@ -1084,6 +1115,15 @@ class H24_Cart_Abandonment {
 		return $itemDatas;
 	}
 
+	public function getCategoryByID($request){
+		$category_id = sanitize_text_field($request->get_param('categoryID') );
+		$category = get_term_by( 'id', $category_id, 'product_cat', 'ARRAY_A' );
+		return array(
+			"code" => "SUCCESS",
+			"data" => $category
+		);
+	}
+
 	public function listProducts($request){
 		$params = $this->wporg_recursive_sanitize_text_field( $request->get_params() );
 
@@ -1093,12 +1133,23 @@ class H24_Cart_Abandonment {
 		$productDatas = array();
 		
 		foreach($products as $product) {
-			$product_data = $product->get_data(); // The Order data
+			$product_data = $product->get_data();
 
 			if ($product->get_type() == "variable") {
-				$product_data["variations"] = $product->get_available_variations();
+				$children_ids = $product->get_children();
+				foreach($children_ids as $children_id) {
+					$variant = wc_get_product( $children_id );
+					$variant_data = $variant->get_data();
+					$variant_data["images"] = $this->get_images_of_product($variant);
+					$variant_data["permalink"] = $variant->get_permalink();
+
+					$variants[] = $variant_data;
+				}
+				$product_data["variants"] = $variants;
 			}
 
+			$product_data["images"] = $this->get_images_of_product($product);
+			$product_data["permalink"] = $product->get_permalink();
 			$productDatas[] = $product_data;
 		}
 		
@@ -1106,6 +1157,43 @@ class H24_Cart_Abandonment {
 			"code" => "SUCCESS",
 			"data" => $productDatas
 		);
+	}
+
+	public function get_image_by_id($image_id) {
+		$image_attributes = wp_get_attachment_image_src( $attachment_id = $image_id);
+		if($image_attributes != false) {
+			$image = array(
+				"src" => $image_attributes[0],
+				"width" => $image_attributes[1],
+				"height" => $image_attributes[2],
+				"is_intermediate" => $image_attributes[3]
+			);
+
+			return $image;
+		}
+
+		return null;
+	}
+
+	public function get_images_of_product($product) {
+		$images = array();
+		$image_id = $product->get_image_id();
+		if($image_id != null) {
+			$image = $this->get_image_by_id($image_id);
+			if($image != null) {
+				$images[] = $image;
+			}
+		}
+
+		$gallery_image_ids = $product->get_gallery_image_ids();
+		foreach($gallery_image_ids as $gallery_image_id) {
+			$gallery_image = $this->get_image_by_id($gallery_image_id);
+			if($gallery_image != null) {
+				$images[] = $gallery_image;
+			}
+		}
+
+		return $images;
 	}
 
 	public function wporg_recursive_sanitize_text_field( $array ) {
@@ -1335,24 +1423,96 @@ class H24_Cart_Abandonment {
 			$other_fields = $cart['other_fields'];
 			$email = $cart['email'];
 			$phone = $other_fields['h24_phone_number'];
+			$first_name = $other_fields['h24_name'];
+			$last_name = $other_fields['h24_surname'];
 	
+			$h24_billing_first_name = $first_name;
+			$h24_billing_last_name = $last_name;
+			$h24_billing_company = $other_fields['h24_billing_company'];
+			$h24_billing_address_1 = $other_fields['h24_billing_address_1'];
+			$h24_billing_address_2 = $other_fields['h24_billing_address_2'];
+			$h24_billing_city = $other_fields['h24_billing_city'];
+			$h24_billing_state = $other_fields['h24_billing_state'];
+			$h24_billing_postcode = $other_fields['h24_billing_postcode'];
+			$h24_billing_country = $other_fields['h24_billing_country'];
+
+			$h24_shipping_first_name = $other_fields['h24_shipping_first_name'];
+			$h24_shipping_last_name = $other_fields['h24_shipping_last_name'];
+			$h24_shipping_company = $other_fields['h24_shipping_company'];
+			$h24_shipping_address_1 = $other_fields['h24_shipping_address_1'];
+			$h24_shipping_address_2 = $other_fields['h24_shipping_address_2'];
+			$h24_shipping_city = $other_fields['h24_shipping_city'];
+			$h24_shipping_state = $other_fields['h24_shipping_state'];
+			$h24_shipping_postcode = $other_fields['h24_shipping_postcode'];
+			$h24_shipping_country = $other_fields['h24_shipping_country'];
+			
+			if($h24_shipping_first_name == null || $h24_shipping_first_name == '') {
+				$h24_shipping_first_name = $h24_billing_first_name;
+			}
+
+			if($h24_shipping_last_name == null || $h24_shipping_last_name == '') {
+				$h24_shipping_last_name = $h24_billing_last_name;
+			}
+
+			if($h24_shipping_company == null || $h24_shipping_company == '') {
+				$h24_shipping_company = $h24_billing_company;
+			}
+
+			if($h24_shipping_address_1 == null || $h24_shipping_address_1 == '') {
+				$h24_shipping_address_1 = $h24_billing_address_1;
+			}
+
+			if($h24_shipping_address_2 == null || $h24_shipping_address_2 == '') {
+				$h24_shipping_address_2 = $h24_billing_address_2;
+			}
+
+			if($h24_shipping_city == null || $h24_shipping_city == '') {
+				$h24_shipping_city = $h24_billing_city;
+			}
+
+			if($h24_shipping_state == null || $h24_shipping_state == '') {
+				$h24_shipping_state = $h24_billing_state;
+			}
+
+			if($h24_shipping_postcode == null || $h24_shipping_postcode == '') {
+				$h24_shipping_postcode = $h24_billing_postcode;
+			}
+
+			if($h24_shipping_country == null || $h24_shipping_country == '') {
+				$h24_shipping_country = $h24_billing_country;
+			}
+
 			// add billing and shipping addresses
 			$shipping_address = array(
-				'first_name' => $other_fields['h24_shipping_first_name'],
-				'last_name'  => $other_fields['h24_shipping_last_name'],
-				'company'    => $other_fields['h24_shipping_company'],
-				'address_1'  => $other_fields['h24_shipping_address_1'],
-				'address_2'  => $other_fields['h24_shipping_address_2'],
-				'city'       => $other_fields['h24_shipping_city'],
-				'state'      => $other_fields['h24_shipping_state'],
-				'postcode'   => $other_fields['h24_shipping_postcode'],
-				'country'    => $other_fields['h24_shipping_country'],
+				'first_name' => $h24_shipping_first_name,
+				'last_name'  => $h24_shipping_last_name,
+				'company'    => $h24_shipping_company,
+				'address_1'  => $h24_shipping_address_1,
+				'address_2'  => $h24_shipping_address_2,
+				'city'       => $h24_shipping_city,
+				'state'      => $h24_shipping_state,
+				'postcode'   => $h24_shipping_postcode,
+				'country'    => $h24_shipping_country,
+				'email'      => $email,
+				'phone'      => $phone
+			);
+
+			$billing_address = array(
+				'first_name' => $h24_billing_first_name,
+				'last_name'  => $h24_billing_last_name,
+				'company'    => $h24_billing_company,
+				'address_1'  => $h24_billing_address_1,
+				'address_2'  => $h24_billing_address_2,
+				'city'       => $h24_billing_city,
+				'state'      => $h24_billing_state,
+				'postcode'   => $h24_billing_postcode,
+				'country'    => $h24_billing_country,
 				'email'      => $email,
 				'phone'      => $phone
 			);
 	
 			$order->set_address( $shipping_address, 'shipping' );
-			$order->set_address( $shipping_address, 'billing' );
+			$order->set_address( $billing_address, 'billing' );
 	
 			if($is_free_shipping == false) {
 				$shipping_methods = $cart['shipping_methods'];
