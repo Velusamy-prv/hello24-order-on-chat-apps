@@ -1,2 +1,12 @@
 Version 1.0.0 - Monday, 1st Aug 2022
 - Initial Release
+
+
+Version 1.1.0 - Friday, 02 Sep 2022
+
+- Added COD to Prepaid features, Abandoned cart recovery by End to End Whatsapp checkout flow.
+- Whatsapp Button customization new settings
+
+Version 1.2.0 - Sunday, 30 Oct 2022
+
+- Bug fixes and performance improvements.
