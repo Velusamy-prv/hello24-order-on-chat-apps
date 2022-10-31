@@ -3,7 +3,7 @@ Contributors: Sivaraj
 Tags: whatsapp api, click to chat, woocommerce order on whatsapp, whatsapp button, abandoned cart
 Requires at least: 4.4
 Tested up to: 6.0.1
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 Requires PHP: 5.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -116,3 +116,7 @@ You can fill in your business details using this [link](https://forms.gle/4NaM6W
 = 1.2.0 =
 
 - Bug fixes and performance improvements.
+
+= 1.3.0 =
+
+- Whatsapp Shop features & improvements.
